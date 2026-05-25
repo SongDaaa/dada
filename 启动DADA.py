@@ -10,7 +10,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 PORT = 8765
 ADDR = '127.0.0.1'
-URL = f'http://{ADDR}:{PORT}/DADA.html'
+URL = f'http://{ADDR}:{PORT}/index.html'
 
 class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
     protocol_version = 'HTTP/1.1'
