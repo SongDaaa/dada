@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DADA - 背单词</title>
+<meta name="theme-color" content="#e07b5a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="DADA背单词">
+<link rel="stylesheet" href="style.css?v=9">
+<script src="dada-data.js?v=9" defer></script>
+<script src="dada-speech.js?v=9" defer></script>
+<script src="dada-study.js?v=9" defer></script>
+<script src="dada-ui.js?v=9" defer></script>
+<script src="dada-init.js?v=9" defer></script>
+</head>
+<body>
+<div id="loadStatus" style="position:fixed;top:4px;right:8px;font-size:11px;color:#aaa;z-index:999;">loading...</div>
+
+<header>
+  <div class="logo">DADA</div>
+  <div class="header-right">
+    <span class="timer-badge" id="timerDisplay">⏱ 0:00</span>
+    <span class="streak-badge" id="streakDisplay">🔥 0天</span>
+  </div>
+  <nav>
+    <button class="active" data-page="study">学习</button>
+    <button data-page="quiz">测验</button>
+    <button data-page="review">复习<span id="reviewBadge" class="badge" style="display:none;margin-left:4px;"></span></button>
+    <button data-page="bank">词库</button>
+  </nav>
+</header>
+
+<main>
+  <!-- Study Page -->
+  <section class="page active" id="page-study">
+    <div class="rate-control">
+      <span>语速</span>
+      <input type="range" id="rateSlider" min="0.5" max="1.5" step="0.1" value="0.9">
+      <span id="rateLabel">0.9x</span>
+      <span style="margin-left:16px;">每日</span>
+      <select id="dailyLimitSelect" style="padding:4px 8px;border:2px solid #e8e3dd;border-radius:14px;font-size:13px;outline:none;background:var(--card);">
+        <option value="10">10词</option>
+        <option value="20" selected>20词</option>
+        <option value="30">30词</option>
+        <option value="50">50词</option>
+        <option value="100">100词</option>
+      </select>
+      <span style="margin-left:16px;">词书</span>
+      <select id="studyBookSelect" style="padding:4px 8px;border:2px solid #e8e3dd;border-radius:14px;font-size:13px;outline:none;background:var(--card);">
+        <option value="all">全部</option>
+        <option value="cet4">CET-4</option>
+        <option value="cet6">CET-6</option>
+        <option value="ky">考研</option>
+        <option value="ielts">雅思</option>
+        <option value="zsb">专升本</option>
+      </select>
+    </div>
+    <div class="card-wrap" id="cardWrap">
+      <div class="card-inner" id="cardInner">
+        <div class="card-face card-front">
+          <div class="card-status" id="cardStatus"></div>
+          <div class="card-word" id="cardEn">DADA</div>
+          <div class="card-phonetic" id="cardPhonetic"></div>
+          <button class="speak-btn" id="speakBtn" title="发音">🔊</button>
+          <div class="card-hint">点击翻转</div>
+        </div>
+        <div class="card-face card-back">
+          <div class="card-word" id="cardEnBack" style="font-size:20px;opacity:.8;"></div>
+          <div class="card-zh" id="cardZh">哒哒</div>
+          <button class="speak-btn" id="speakBtn2" title="发音">🔊</button>
+          <div class="card-hint">点击翻转</div>
+        </div>
+      </div>
+    </div>
+    <div class="progress" id="studyProgress"></div>
+    <div class="card-nav">
+      <button class="btn btn-s btn-sm" id="btnPrevWord">◀ 上一词</button>
+      <span style="font-size:12px;color:var(--sub);" id="cardNavInfo"></span>
+      <button class="btn btn-s btn-sm" id="btnNextWord">下一词 ▶</button>
+    </div>
+    <div class="stats">
+      <div class="stat">📚 未掌握 <b id="statUnmastered">0</b></div>
+      <div class="stat">🔄 学习中 <b id="statLearning">0</b></div>
+      <div class="stat">✅ 已掌握 <b id="statMastered">0</b></div>
+    </div>
+    <div style="text-align:center;margin-top:16px;display:flex;gap:10px;justify-content:center;">
+      <button class="btn btn-p" id="btnKnow">✅ 我认识</button>
+      <button class="btn btn-s" id="btnDunno">❌ 不认识</button>
+    </div>
+    <div class="checkin-area">
+      <button class="btn btn-p btn-sm" id="btnCheckIn">📅 打卡</button>
+      <span id="checkInStatus"></span>
+    </div>
+    <div class="mydata-panel">
+      <div class="mydata-header" id="mydataToggle">📊 我的数据 ▾</div>
+      <div class="mydata-body" id="mydataBody">
+        <div class="mydata-row"><span>📅 累计学习</span> <b id="mdTotalDays">0</b> 天</div>
+        <div class="mydata-row"><span>⏱ 今日时长</span> <b id="mdTodayTime">0:00</b></div>
+        <div class="mydata-row"><span>🕐 累计时长</span> <b id="mdTotalTime">0:00</b></div>
+        <div class="mydata-row"><span>📖 累计单词</span> <b id="mdWordsStudied">0</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quiz Page -->
+  <section class="page" id="page-quiz">
+    <div class="quiz-mode-bar">
+      <button class="active" data-mode="en2zh">英选中</button>
+      <button data-mode="zh2en">中选英</button>
+      <button data-mode="spell">拼写模式</button>
+    </div>
+    <div class="quiz-card">
+      <div class="quiz-word" id="quizWord">word</div>
+      <div class="quiz-opts" id="quizOpts"></div>
+      <div id="quizSpellArea" style="display:none;">
+        <button class="btn-listen" id="btnListenAgain">🔊 再听一次</button><br>
+        <input type="text" class="spelling-input" id="spellingInput" placeholder="输入英文拼写" autocomplete="off" autocapitalize="off" spellcheck="false"><br>
+        <button class="btn btn-p" id="btnSpellCheck">确认</button>
+      </div>
+      <div class="quiz-result" id="quizResult"></div>
+    </div>
+    <div class="stats" style="margin-top:16px;">
+      <div class="stat">✅ 正确 <b id="quizCorrect">0</b></div>
+      <div class="stat">❌ 错误 <b id="quizWrong">0</b></div>
+      <div class="stat">📊 正确率 <b id="quizRate">-</b></div>
+    </div>
+    <div style="text-align:center;margin-top:12px;">
+      <button class="btn btn-p" id="btnNextQuiz">下一题</button>
+    </div>
+  </section>
+
+  <!-- Review Page -->
+  <section class="page" id="page-review">
+    <div style="margin-bottom:12px;">
+      <button class="btn btn-p" id="btnReviewAll" style="margin-right:8px;">开始复习全部到期</button>
+      <span style="font-size:13px;color:var(--sub);" id="reviewSummary"></span>
+    </div>
+    <div id="reviewList"></div>
+  </section>
+
+  <!-- Word Bank Page -->
+  <section class="page" id="page-bank">
+    <div class="add-form">
+      <input type="text" id="addEn" placeholder="英文单词">
+      <input type="text" id="addZh" placeholder="中文释义">
+      <input type="text" id="addPhonetic" placeholder="音标(可选)">
+      <button class="btn btn-p" id="btnAdd">添加</button>
+    </div>
+    <div class="toolbar">
+      <input type="text" id="searchInput" placeholder="搜索单词...">
+      <button class="btn btn-s" id="btnImport">📥 导入CSV</button>
+      <button class="btn btn-s" id="btnPreset">📦 预设词库</button>
+    </div>
+    <div id="bookCards"></div>
+    <div id="bookDetailBar" style="display:none;">
+      <button class="btn btn-s btn-sm" id="btnBackToBooks">← 返回词库</button>
+      <span id="bookDetailTitle" style="font-weight:600;margin:0 12px;font-size:15px;"></span>
+      <span style="font-size:12px;color:var(--sub);line-height:28px;margin-right:4px;">分类:</span>
+      <button class="btn btn-s btn-sm subcat-btn active" data-subcat="all">全部</button>
+      <button class="btn btn-s btn-sm subcat-btn" data-subcat="high">高频词</button>
+      <button class="btn btn-s btn-sm subcat-btn" data-subcat="exam">真题词</button>
+    </div>
+    <div class="filter-bar">
+      <span style="font-size:12px;color:var(--sub);line-height:28px;margin-right:4px;">状态:</span>
+      <button class="btn btn-s btn-sm filter-btn active" data-filter="all">全部</button>
+      <button class="btn btn-s btn-sm filter-btn" data-filter="unmastered">未掌握</button>
+      <button class="btn btn-s btn-sm filter-btn" data-filter="learning">学习中</button>
+      <button class="btn btn-s btn-sm filter-btn" data-filter="mastered">已掌握</button>
+      <button class="btn btn-s btn-sm filter-btn" data-filter="mistake">错题本</button>
+    </div>
+    <table class="word-table">
+      <thead><tr><th>单词</th><th>释义</th><th>词库</th><th>状态</th><th>操作</th></tr></thead>
+      <tbody id="wordTableBody"></tbody>
+    </table>
+    <div style="text-align:center;margin-top:8px;color:var(--sub);font-size:13px;" id="wordCount"></div>
+
+    <div class="backup-section">
+      <span>💾 数据备份</span>
+      <button class="btn btn-s btn-sm" id="btnExport">📤 导出JSON</button>
+      <button class="btn btn-s btn-sm" id="btnImportFile">📥 导入JSON</button>
+      <input type="file" id="importFileInput" accept=".json" style="display:none;">
+      <button class="btn btn-s btn-sm" id="btnImportCSVFile">📥 导入CSV文件</button>
+      <input type="file" id="importCSVFileInput" accept=".csv,.txt" style="display:none;">
+    </div>
+  </section>
+</main>
+
+<!-- Import CSV Modal -->
+<div class="modal" id="importModal" style="display:none;">
+  <div class="modal-box">
+    <h3>导入CSV词库</h3>
+    <p style="font-size:13px;color:var(--sub);margin-bottom:8px;">每行格式：<code>英文,中文释义,音标</code>（音标可选）</p>
+    <textarea id="importText" placeholder="abandon,放弃,/əˈbændən/&#10;book,书,/bʊk/&#10;cat,猫&#10;&#10;支持逗号、中文逗号、Tab分隔"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-s" id="btnImportCancel">取消</button>
+      <button class="btn btn-p" id="btnImportConfirm">导入</button>
+    </div>
+  </div>
+</div>
+
+<!-- Preset Modal -->
+<div class="modal" id="presetModal" style="display:none;">
+  <div class="modal-box">
+    <h3>📦 加载预设词库</h3>
+    <p style="font-size:13px;color:var(--sub);margin-bottom:12px;">选择一个词库加载（重复单词将被跳过）</p>
+    <div style="display:grid;gap:8px;">
+      <button class="btn btn-s preset-btn" data-preset="cet4">📗 CET-4 四级核心词汇（50词，含音标）</button>
+      <button class="btn btn-s preset-btn" data-preset="cet6">📘 CET-6 六级核心词汇（30词，含音标）</button>
+      <button class="btn btn-s preset-btn" data-preset="ielts">📙 雅思核心词汇（30词，含音标）</button>
+      <button class="btn btn-s preset-btn" data-preset="ky">📕 考研核心词汇（30词，含音标）</button>
+      <button class="btn btn-s preset-btn" data-preset="zsb">📓 专升本核心词汇（30词，含音标）</button>
+    </div>
+    <div class="modal-actions" style="margin-top:14px;">
+      <button class="btn btn-s" id="btnPresetCancel">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal" id="confirmModal" style="display:none;">
+  <div class="modal-box">
+    <h3 id="confirmTitle">确认</h3>
+    <p id="confirmMsg" style="font-size:14px;color:var(--sub);margin-bottom:16px;"></p>
+    <div class="modal-actions">
+      <button class="btn btn-s" id="btnConfirmCancel">取消</button>
+      <button class="btn btn-danger" id="btnConfirmOk">确认</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+</body>
+</html>
