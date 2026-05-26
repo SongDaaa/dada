@@ -15,6 +15,7 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
+            is_admin INTEGER DEFAULT 0,
             created_at TEXT DEFAULT (datetime('now'))
         );
         CREATE TABLE IF NOT EXISTS words (
@@ -41,6 +42,11 @@ def init_db():
         );
         CREATE INDEX IF NOT EXISTS idx_words_user ON words(user_id);
     """)
+    # Migration: add is_admin column if missing
+    try:
+        db.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0")
+    except:
+        pass
     db.commit()
     db.close()
 
@@ -128,3 +134,37 @@ def get_user_stats(user_id):
     if row:
         return json.loads(row['data'])
     return {}
+
+def set_admin(username):
+    db = get_db()
+    db.execute("UPDATE users SET is_admin=1 WHERE username=?", (username,))
+    db.commit()
+    db.close()
+
+def is_admin(user_id):
+    db = get_db()
+    row = db.execute("SELECT is_admin FROM users WHERE id=?", (user_id,)).fetchone()
+    db.close()
+    return row and row['is_admin'] == 1
+
+def get_all_users_stats():
+    db = get_db()
+    users = db.execute("SELECT id, username, created_at, is_admin FROM users ORDER BY id").fetchall()
+    result = []
+    for u in users:
+        word_count = db.execute("SELECT COUNT(*) as c FROM words WHERE user_id=?", (u['id'],)).fetchone()['c']
+        stat_row = db.execute("SELECT data FROM stats WHERE user_id=?", (u['id'],)).fetchone()
+        stats_data = json.loads(stat_row['data']) if stat_row else {}
+        result.append({
+            'id': u['id'],
+            'username': u['username'],
+            'created_at': u['created_at'],
+            'is_admin': bool(u['is_admin']),
+            'word_count': word_count,
+            'streak': stats_data.get('streak', 0),
+            'checkInStreak': stats_data.get('checkInStreak', 0),
+            'totalStudyDays': stats_data.get('totalStudyDays', 0),
+            'wordsStudied': stats_data.get('wordsStudied', 0)
+        })
+    db.close()
+    return result
