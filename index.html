@@ -7,19 +7,34 @@
 <meta name="theme-color" content="#e07b5a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DADA背单词">
-<link rel="stylesheet" href="style.css?v=12">
-<script src="dada-data.js?v=12" defer></script>
-<script src="dada-speech.js?v=12" defer></script>
-<script src="dada-study.js?v=12" defer></script>
-<script src="dada-auth.js?v=12" defer></script>
-<script src="dada-challenge.js?v=12" defer></script>
-<script src="dada-swipe.js?v=12" defer></script>
-<script src="dada-ui.js?v=12" defer></script>
-<script src="dada-init.js?v=12" defer></script>
+<link rel="stylesheet" href="style.css?v=13">
+<script src="dada-data.js?v=13" defer></script>
+<script src="dada-speech.js?v=13" defer></script>
+<script src="dada-study.js?v=13" defer></script>
+<script src="dada-auth.js?v=13" defer></script>
+<script src="dada-challenge.js?v=13" defer></script>
+<script src="dada-swipe.js?v=13" defer></script>
+<script src="dada-ui.js?v=13" defer></script>
+<script src="dada-init.js?v=13" defer></script>
 </head>
 <body>
-<div id="loadStatus" style="position:fixed;top:4px;right:8px;font-size:11px;color:#aaa;z-index:999;">loading...</div>
 
+<!-- Splash Screen -->
+<div id="splash">
+  <div class="splash-bg" id="splashBg"></div>
+  <div class="splash-overlay"></div>
+  <div class="splash-content">
+    <div class="splash-logo">DADA</div>
+    <div class="splash-sub">每日背单词 · 积少成多</div>
+    <div class="splash-info" id="splashInfo"></div>
+    <button class="splash-btn" id="splashBtn">📅 签到打卡</button>
+    <button class="splash-btn splash-go" id="splashGo" style="display:none;">开始学习 →</button>
+    <div class="splash-hint" id="splashHint"></div>
+  </div>
+</div>
+
+<!-- App Main -->
+<div id="appMain" style="display:none;">
 <header>
   <div class="logo">DADA</div>
   <div class="header-right">
@@ -30,10 +45,8 @@
   </div>
   <nav>
     <button class="active" data-page="study">学习</button>
-    <button data-page="quiz">测验</button>
-    <button data-page="challenge">挑战</button>
     <button data-page="swipe">刷词</button>
-    <button data-page="review">复习<span id="reviewBadge" class="badge" style="display:none;margin-left:4px;"></span></button>
+    <button data-page="challenge">挑战</button>
     <button data-page="bank">词库</button>
   </nav>
 </header>
@@ -41,27 +54,34 @@
 <main>
   <!-- Study Page -->
   <section class="page active" id="page-study">
-    <div class="rate-control">
-      <span>语速</span>
-      <input type="range" id="rateSlider" min="0.5" max="1.5" step="0.1" value="0.9">
-      <span id="rateLabel">0.9x</span>
-      <span style="margin-left:16px;">每日</span>
-      <select id="dailyLimitSelect" style="padding:4px 8px;border:2px solid #e8e3dd;border-radius:14px;font-size:13px;outline:none;background:var(--card);">
-        <option value="10">10词</option>
-        <option value="20" selected>20词</option>
-        <option value="30">30词</option>
-        <option value="50">50词</option>
-        <option value="100">100词</option>
-      </select>
-      <span style="margin-left:16px;">词书</span>
-      <select id="studyBookSelect" style="padding:4px 8px;border:2px solid #e8e3dd;border-radius:14px;font-size:13px;outline:none;background:var(--card);">
-        <option value="all">全部</option>
-        <option value="cet4">CET-4</option>
-        <option value="cet6">CET-6</option>
-        <option value="ky">考研</option>
-        <option value="ielts">雅思</option>
-        <option value="zsb">专升本</option>
-      </select>
+    <div class="settings-bar" id="settingsBar" style="display:none;">
+      <div class="settings-row">
+        <span>语速</span>
+        <input type="range" id="rateSlider" min="0.5" max="1.5" step="0.1" value="0.9">
+        <span id="rateLabel">0.9x</span>
+      </div>
+      <div class="settings-row">
+        <span>每日</span>
+        <select id="dailyLimitSelect">
+          <option value="10">10词</option>
+          <option value="20" selected>20词</option>
+          <option value="30">30词</option>
+          <option value="50">50词</option>
+          <option value="100">100词</option>
+        </select>
+        <span>词书</span>
+        <select id="studyBookSelect">
+          <option value="all">全部</option>
+          <option value="cet4">CET-4</option>
+          <option value="cet6">CET-6</option>
+          <option value="ky">考研</option>
+          <option value="ielts">雅思</option>
+          <option value="zsb">专升本</option>
+        </select>
+      </div>
+    </div>
+    <div style="text-align:right;margin-bottom:4px;">
+      <button class="btn btn-s btn-sm" id="btnSettings">⚙</button>
     </div>
     <div class="card-wrap" id="cardWrap">
       <div class="card-inner" id="cardInner">
@@ -75,7 +95,7 @@
         <div class="card-face card-back">
           <div class="card-word" id="cardEnBack" style="font-size:20px;opacity:.8;"></div>
           <div class="card-phonetic" id="cardPhoneticBack" style="font-style:italic;"></div>
-	          <div class="card-zh" id="cardZh">哒哒</div>
+          <div class="card-zh" id="cardZh">哒哒</div>
           <button class="speak-btn" id="speakBtn2" title="发音">🔊</button>
           <div class="card-hint">点击翻转</div>
         </div>
@@ -96,19 +116,27 @@
       <button class="btn btn-p" id="btnKnow">✅ 我认识</button>
       <button class="btn btn-s" id="btnDunno">❌ 不认识</button>
     </div>
+
+    <!-- Calendar (collapsed by default) -->
     <div class="checkin-area">
-      <div class="cal-nav">
-        <button class="btn btn-s btn-sm" id="calPrev">◀</button>
-        <span id="calMonthTitle" style="font-weight:600;min-width:110px;text-align:center;">2026年5月</span>
-        <button class="btn btn-s btn-sm" id="calNext">▶</button>
-        <span id="makeUpBadge" style="margin-left:8px;font-size:12px;color:var(--accent);">🎫 x0</span>
+      <div class="cal-summary" id="calSummary">
+        <span id="calSummaryText" style="font-size:13px;color:var(--sub);cursor:pointer;"></span>
       </div>
-      <div class="cal-grid" id="calGrid"></div>
-      <div style="text-align:center;margin-top:6px;">
-        <button class="btn btn-p btn-sm" id="btnCheckIn">📅 打卡</button>
-        <span id="checkInStatus" style="font-size:12px;color:var(--sub);margin-left:8px;"></span>
+      <div class="cal-expand" id="calExpand" style="display:none;">
+        <div class="cal-nav">
+          <button class="btn btn-s btn-sm" id="calPrev">◀</button>
+          <span id="calMonthTitle" style="font-weight:600;min-width:110px;text-align:center;"></span>
+          <button class="btn btn-s btn-sm" id="calNext">▶</button>
+          <span id="makeUpBadge" style="margin-left:8px;font-size:12px;color:var(--accent);">🎫 x0</span>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div style="text-align:center;margin-top:6px;">
+          <button class="btn btn-p btn-sm" id="btnCheckIn">📅 打卡</button>
+          <span id="checkInStatus" style="font-size:12px;color:var(--sub);margin-left:8px;"></span>
+        </div>
       </div>
     </div>
+
     <div class="mydata-panel">
       <div class="mydata-header" id="mydataToggle">📊 我的数据 ▾</div>
       <div class="mydata-body" id="mydataBody">
@@ -120,42 +148,11 @@
     </div>
   </section>
 
-  <!-- Quiz Page -->
-  <section class="page" id="page-quiz">
-    <div class="quiz-mode-bar">
-      <button class="active" data-mode="en2zh">英选中</button>
-      <button data-mode="zh2en">中选英</button>
-      <button data-mode="spell">拼写模式</button>
-    </div>
-    <div class="quiz-card">
-      <div class="quiz-word" id="quizWord">word</div>
-      <button class="speak-inline" id="quizSpeakBtn" title="发音" onclick="if(quizWord) try{speak(quizWord.en)}catch(e){}">🔊</button>
-      <div class="quiz-opts" id="quizOpts"></div>
-      <div id="quizSpellArea" style="display:none;">
-        <button class="btn-listen" id="btnListenAgain">🔊 再听一次</button><br>
-        <input type="text" class="spelling-input" id="spellingInput" placeholder="输入英文拼写" autocomplete="off" autocapitalize="off" spellcheck="false"><br>
-        <button class="btn btn-p" id="btnSpellCheck">确认</button>
-      </div>
-      <div class="quiz-result" id="quizResult"></div>
-    </div>
-    <div class="stats" style="margin-top:16px;">
-      <div class="stat">✅ 正确 <b id="quizCorrect">0</b></div>
-      <div class="stat">❌ 错误 <b id="quizWrong">0</b></div>
-      <div class="stat">📊 正确率 <b id="quizRate">-</b></div>
-    </div>
-    <div style="text-align:center;margin-top:12px;">
-      <button class="btn btn-p" id="btnNextQuiz">下一题</button>
-    </div>
-  </section>
+  <!-- Quiz Page (hidden from nav, used internally) -->
+  <section class="page" id="page-quiz" style="display:none;"></section>
 
-  <!-- Review Page -->
-  <section class="page" id="page-review">
-    <div style="margin-bottom:12px;">
-      <button class="btn btn-p" id="btnReviewAll" style="margin-right:8px;">开始复习全部到期</button>
-      <span style="font-size:13px;color:var(--sub);" id="reviewSummary"></span>
-    </div>
-    <div id="reviewList"></div>
-  </section>
+  <!-- Review Page (hidden from nav) -->
+  <section class="page" id="page-review" style="display:none;"></section>
 
   <!-- Word Bank Page -->
   <section class="page" id="page-bank">
@@ -194,12 +191,14 @@
     <div style="text-align:center;margin-top:8px;color:var(--sub);font-size:13px;" id="wordCount"></div>
 
     <div class="backup-section">
-      <span>💾 数据备份</span>
-      <button class="btn btn-s btn-sm" id="btnExport">📤 导出JSON</button>
-      <button class="btn btn-s btn-sm" id="btnImportFile">📥 导入JSON</button>
-      <input type="file" id="importFileInput" accept=".json" style="display:none;">
-      <button class="btn btn-s btn-sm" id="btnImportCSVFile">📥 导入CSV文件</button>
-      <input type="file" id="importCSVFileInput" accept=".csv,.txt" style="display:none;">
+      <div class="backup-header" id="backupToggle" style="cursor:pointer;font-size:13px;color:var(--sub);padding:8px 0;">💾 数据备份 ▸</div>
+      <div class="backup-body" id="backupBody" style="display:none;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-s btn-sm" id="btnExport">📤 导出JSON</button>
+        <button class="btn btn-s btn-sm" id="btnImportFile">📥 导入JSON</button>
+        <input type="file" id="importFileInput" accept=".json" style="display:none;">
+        <button class="btn btn-s btn-sm" id="btnImportCSVFile">📥 导入CSV文件</button>
+        <input type="file" id="importCSVFileInput" accept=".csv,.txt" style="display:none;">
+      </div>
     </div>
   </section>
 
@@ -241,17 +240,18 @@
       </div>
     </div>
     <div class="swipe-hints">
-	      <button class="btn btn-s" onclick="doSwipe('left')" style="padding:10px 24px;">← 不认识</button>
-	      <button class="btn btn-p" onclick="doSwipe('right')" style="padding:10px 24px;">认识 →</button>
-	    </div>
+      <button class="btn btn-s" onclick="doSwipe('left')" style="padding:10px 24px;">← 不认识</button>
+      <button class="btn btn-p" onclick="doSwipe('right')" style="padding:10px 24px;">认识 →</button>
+    </div>
     <div id="swipeDone" style="text-align:center;padding:32px;"></div>
     <div style="text-align:center;margin-top:8px;">
       <button class="btn btn-p" id="btnSwipeRestart" style="display:none;" onclick="restartSwipe()">🔄 再来一轮</button>
     </div>
   </section>
 </main>
+</div>
 
-<!-- Import CSV Modal -->
+<!-- Modals (unchanged) -->
 <div class="modal" id="importModal" style="display:none;">
   <div class="modal-box">
     <h3>导入CSV词库</h3>
@@ -264,7 +264,6 @@
   </div>
 </div>
 
-<!-- Preset Modal -->
 <div class="modal" id="presetModal" style="display:none;">
   <div class="modal-box">
     <h3>📦 加载预设词库</h3>
@@ -282,7 +281,6 @@
   </div>
 </div>
 
-<!-- Confirm Modal -->
 <div class="modal" id="confirmModal" style="display:none;">
   <div class="modal-box">
     <h3 id="confirmTitle">确认</h3>
