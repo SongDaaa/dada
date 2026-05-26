@@ -247,7 +247,7 @@ function init() {
   safe(function() {
     document.getElementById('backupToggle').addEventListener('click', function() {
       var body = document.getElementById('backupBody');
-      body.style.display = body.style.display === 'none' ? '' : 'none';
+      body.style.display = body.style.display === 'none' ? 'flex' : 'none';
       var txt = body.style.display === 'none' ? '▸' : '▾';
       document.getElementById('backupToggle').textContent = '💾 数据备份 ' + txt;
     });
