@@ -90,8 +90,9 @@ function updateCheckInUI() {
   var today = new Date().toISOString().slice(0,10);
   var el = document.getElementById('checkInStatus');
   var btn = document.getElementById('btnCheckIn');
+  var checkedToday = stats.checkInDates[today];
   if (el && btn) {
-    if (stats.checkInDates[today]) {
+    if (checkedToday) {
       btn.textContent = '✅ 已打卡';
       btn.classList.add('btn-done');
       el.textContent = '连续 ' + (stats.checkInStreak || 1) + ' 天';
@@ -103,6 +104,15 @@ function updateCheckInUI() {
   }
   var badge = document.getElementById('makeUpBadge');
   if (badge) badge.textContent = '🎫 x' + (stats.makeUpCards || 0);
+  // Calendar summary line
+  var summary = document.getElementById('calSummaryText');
+  if (summary) {
+    var parts = [];
+    parts.push('🔥 连续' + (stats.checkInStreak || 0) + '天');
+    parts.push(checkedToday ? '✅ 今日已打卡' : '📅 今日未打卡');
+    if (stats.makeUpCards > 0) parts.push('🎫x' + stats.makeUpCards);
+    summary.textContent = parts.join(' · ');
+  }
   // Init calendar to current month
   var d = new Date();
   if (calYear === 0) { calYear = d.getFullYear(); calMonth = d.getMonth() + 1; }
