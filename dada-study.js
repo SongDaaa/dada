@@ -39,12 +39,14 @@ function showCard() {
   document.getElementById('cardPhonetic').textContent = w.phonetic || '';
   document.getElementById('cardEnBack').textContent = w.en;
   document.getElementById('cardZh').textContent = w.zh;
+  document.getElementById('cardPhoneticBack').textContent = w.phonetic || '';
   var statusText = w.status === 'new' ? '🌕 新学' : (w.status === 'learning' ? '🔄 复习' : '');
   if (w.category) statusText += ' | ' + (categoryLabel(w.category));
   document.getElementById('cardStatus').textContent = statusText;
   document.getElementById('cardInner').classList.remove('flipped');
   renderStudyProgress();
   updateCardNav();
+  try { speak(w.en); } catch(e) {}
 }
 
 function updateCardNav() {
