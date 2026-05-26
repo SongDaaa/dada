@@ -1,5 +1,91 @@
-// dada-init.js — PWA, initialization, event wiring
+// dada-init.js — Splash, PWA, initialization, event wiring
 // Dependencies: dada-data.js, dada-speech.js, dada-study.js, dada-ui.js
+
+// ── Splash Screen ──
+(function initSplash() {
+  var themes = ['theme-1','theme-2','theme-3','theme-4','theme-5'];
+  var ti = 0;
+  var bg = document.getElementById('splashBg');
+  var btn = document.getElementById('splashBtn');
+  var go = document.getElementById('splashGo');
+  var info = document.getElementById('splashInfo');
+  var hint = document.getElementById('splashHint');
+
+  // Rotate backgrounds
+  if (bg) {
+    bg.className = 'splash-bg ' + themes[0];
+    setInterval(function() {
+      ti = (ti + 1) % themes.length;
+      bg.className = 'splash-bg ' + themes[ti];
+    }, 6000);
+  }
+
+  // Load stats for splash info
+  try {
+    var raw = localStorage.getItem('dada_stats');
+    if (raw) {
+      var s = JSON.parse(raw);
+      var today = new Date().toISOString().slice(0,10);
+      if (info) {
+        info.innerHTML = '🔥 学习连续 ' + (s.streak || 0) + ' 天<br>📅 打卡连续 ' + (s.checkInStreak || 0) + ' 天' + (s.makeUpCards > 0 ? ' · 🎫x' + s.makeUpCards : '');
+      }
+      if (s.checkInDates && s.checkInDates[today]) {
+        // Already checked in today
+        if (btn) btn.style.display = 'none';
+        if (go) go.style.display = 'inline-block';
+        if (hint) hint.textContent = '今天已完成打卡，开始学习吧';
+      } else {
+        if (btn) btn.style.display = 'inline-block';
+        if (go) go.style.display = 'none';
+        if (hint) hint.textContent = '每日打卡，积少成多';
+      }
+    }
+  } catch(e) {}
+
+  function enterApp() {
+    var splash = document.getElementById('splash');
+    var app = document.getElementById('appMain');
+    if (splash) splash.style.transition = 'opacity .5s ease';
+    if (splash) splash.style.opacity = '0';
+    if (app) app.style.display = '';
+    setTimeout(function() {
+      if (splash) splash.style.display = 'none';
+      init();
+    }, 500);
+  }
+
+  // Check-in button: check in, then enter
+  if (btn) {
+    btn.addEventListener('click', function() {
+      var today = new Date().toISOString().slice(0,10);
+      // Ensure stats are loaded
+      if (typeof loadStats === 'function') loadStats();
+      // Record check-in
+      if (typeof stats !== 'undefined') {
+        if (!stats.checkInDates) stats.checkInDates = {};
+        if (!stats.checkInDates[today]) {
+          var yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+          stats.checkInDates[today] = true;
+          if (stats.checkInDates[yesterday]) { stats.checkInStreak = (stats.checkInStreak || 0) + 1; }
+          else { stats.checkInStreak = 1; }
+          stats.checkInDate = today;
+          if (stats.checkInStreak > 0 && stats.checkInStreak % 7 === 0) {
+            stats.makeUpCards = (stats.makeUpCards || 0) + 1;
+          }
+          if (typeof saveStats === 'function') saveStats();
+        }
+      }
+      enterApp();
+    });
+  }
+
+  // "Start learning" button: just enter
+  if (go) {
+    go.addEventListener('click', function() {
+      enterApp();
+    });
+  }
+})();
 
 // ── PWA Setup ──
 (function setupPWA() {
@@ -61,6 +147,14 @@ function init() {
     });
   }, 'speakBtn2');
 
+  // Settings toggle
+  safe(function() {
+    document.getElementById('btnSettings').addEventListener('click', function() {
+      var bar = document.getElementById('settingsBar');
+      bar.style.display = bar.style.display === 'none' ? '' : 'none';
+    });
+  }, 'settingsToggle');
+
   // Rate slider
   safe(function() {
     var rateSlider = document.getElementById('rateSlider');
@@ -120,6 +214,14 @@ function init() {
     document.getElementById('btnCheckIn').addEventListener('click', checkIn);
   }, 'checkInBtn');
 
+  // Calendar collapse/expand
+  safe(function() {
+    document.getElementById('calSummary').addEventListener('click', function() {
+      var expand = document.getElementById('calExpand');
+      expand.style.display = expand.style.display === 'none' ? '' : 'none';
+    });
+  }, 'calToggle');
+
   // Calendar navigation
   safe(function() {
     document.getElementById('calPrev').addEventListener('click', function() {
@@ -141,38 +243,21 @@ function init() {
     });
   }, 'mydataToggle');
 
+  // Backup toggle
+  safe(function() {
+    document.getElementById('backupToggle').addEventListener('click', function() {
+      var body = document.getElementById('backupBody');
+      body.style.display = body.style.display === 'none' ? '' : 'none';
+      var txt = body.style.display === 'none' ? '▸' : '▾';
+      document.getElementById('backupToggle').textContent = '💾 数据备份 ' + txt;
+    });
+  }, 'backupToggle');
+
   // Prev/Next word navigation
   safe(function() {
     document.getElementById('btnPrevWord').addEventListener('click', prevWord);
     document.getElementById('btnNextWord').addEventListener('click', nextWord);
   }, 'cardNav');
-
-  // Quiz
-  safe(function() {
-    generateQuiz();
-    document.getElementById('quizOpts').addEventListener('click', function(e) {
-      var btn = e.target.closest('.quiz-opt');
-      if (!btn || btn.disabled) return;
-      handleQuizClick(btn);
-    });
-    document.getElementById('btnNextQuiz').addEventListener('click', generateQuiz);
-    document.getElementById('btnSpellCheck').addEventListener('click', checkSpelling);
-    document.getElementById('btnListenAgain').addEventListener('click', function() {
-      if (quizWord) speak(quizWord.en);
-    });
-    document.getElementById('spellingInput').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') checkSpelling();
-    });
-    var modeBtns = document.querySelectorAll('.quiz-mode-bar button');
-    for (var j = 0; j < modeBtns.length; j++) {
-      (function(btn) { btn.addEventListener('click', function() { switchQuizMode(btn.dataset.mode); }); })(modeBtns[j]);
-    }
-  }, 'quiz');
-
-  // Review
-  safe(function() {
-    document.getElementById('btnReviewAll').addEventListener('click', reviewAllDue);
-  }, 'review');
 
   // Word bank add
   safe(function() {
@@ -287,7 +372,6 @@ function init() {
       reader.onload = function(ev) {
         var jsonStr = ev.target.result;
         showConfirm('导入数据', '导入将合并新单词，已有单词不会被覆盖。确定继续？', function() {
-          // Use batched import for large files
           importJSONBatched(jsonStr, function(done, total) {
             document.getElementById('confirmTitle').textContent = '正在导入... ' + done + '/' + total;
           }, function(newCount, updatedCount) {
@@ -361,7 +445,7 @@ function init() {
   el.textContent = errLog.length > 0 ? 'ERRS(' + errLog.length + '): ' + errLog.join(' | ') : 'DADA OK';
   el.style.color = errLog.length > 0 ? 'red' : '#4a4';
   el.style.display = 'block';
-  if (errLog.length === 0) { setTimeout(function() { el.style.display = 'none'; }, 3000); }
+  if (errLog.length === 0) { setTimeout(function() { el.style.display = 'none'; }, 2000); }
 }
 
 // ── Beforeunload cleanup ──
@@ -369,12 +453,4 @@ window.addEventListener('beforeunload', function() {
   stopLearnTimer();
   saveStats();
   saveWords();
-});
-
-// ── DOMContentLoaded ──
-document.addEventListener('DOMContentLoaded', function() {
-  var el = document.getElementById('loadStatus');
-  try { el.textContent = 'init...'; init(); }
-  catch(e) { el.textContent = 'FATAL: ' + e.message; el.style.color = 'red'; }
-  el.style.display = 'block';
 });
