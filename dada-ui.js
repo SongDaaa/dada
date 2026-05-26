@@ -203,7 +203,7 @@ function renderReviewList() {
     var dueTime = new Date(w.nextReview);
     var ago = Math.round((Date.now() - dueTime) / 3600000);
     return '<div class="review-item">' +
-      '<span><span class="ri-w">' + w.en + '</span> — ' + w.zh + '</span>' +
+      '<span><button class="speak-inline" style="margin-right:6px;" title="发音" onclick="event.stopPropagation();try{speak(\'' + escHtml(w.en).replace(/'/g, "\\'") + '\')}catch(e){}">🔊</button><span class="ri-w">' + w.en + '</span> — ' + w.zh + '</span>' +
       '<span class="ri-d">' + (ago < 1 ? '刚刚到期' : ago + '小时前到期') + ' | 已复习' + w.reviews.length + '次</span>' +
     '</div>';
   }).join('');
