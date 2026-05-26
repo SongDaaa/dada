@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from auth import require_auth
-from models import save_user_words, get_user_words, save_user_stats, get_user_stats
+from models import save_user_words, get_user_words, save_user_stats, get_user_stats, is_admin, get_all_users_stats
 
 api_bp = Blueprint('api', __name__)
 
@@ -43,3 +43,11 @@ def put_stats():
     data = request.get_json(silent=True) or {}
     save_user_stats(request.user_id, data)
     return jsonify({'ok': True})
+
+@api_bp.route('/api/admin/users', methods=['GET'])
+@require_auth
+def admin_users():
+    if not is_admin(request.user_id):
+        return jsonify({'error': '需要管理员权限'}), 403
+    users = get_all_users_stats()
+    return jsonify({'users': users})
