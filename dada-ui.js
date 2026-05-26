@@ -5,7 +5,7 @@ var currentBookFilter = null;
 var currentSubFilter = 'all';
 var currentStatusFilter = 'all';
 var wordTableOffset = 0;
-var WORD_TABLE_PAGE = 50;
+var WORD_TABLE_PAGE = 200;
 
 // ── Navigation ──
 function switchPage(name) {
@@ -175,8 +175,8 @@ function renderWordTable() {
 
   if (total > visible.length) {
     var remaining = total - visible.length;
-    html += '<tr id="loadMoreRow"><td colspan="5" style="text-align:center;padding:12px;">' +
-      '<button class="btn btn-s btn-sm" onclick="wordTableOffset+=' + WORD_TABLE_PAGE + ';renderWordTable();">加载更多（剩余 ' + remaining + ' 个）</button>' +
+    html += '<tr id="loadMoreRow"><td colspan="5" style="text-align:center;padding:16px;">' +
+      '<button class="btn btn-p" style="font-size:14px;padding:10px 32px;" onclick="wordTableOffset+=' + WORD_TABLE_PAGE + ';renderWordTable();">📥 加载更多（剩余 ' + remaining + ' 个）</button>' +
       '</td></tr>';
   }
 
