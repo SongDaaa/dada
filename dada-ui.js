@@ -16,7 +16,6 @@ function switchPage(name) {
   var navBtn = document.querySelector('nav button[data-page="' + name + '"]');
   if (navBtn) navBtn.classList.add('active');
   if (name === 'bank') { wordTableOffset = 0; currentBookFilter = null; showBookCards(); }
-  if (name === 'review') renderReviewList();
   if (name === 'challenge') { try { buildChallenge(); } catch(e) {} }
   if (name === 'swipe') { try { buildSwipeQueue(); setupSwipeTouch(); setupSwipeKeyboard(); } catch(e) {} }
   if (name === 'study') { buildStudyQueue(); showCard(); startLearnTimer(); }
@@ -222,6 +221,5 @@ function updateAllUI() {
   document.getElementById('statUnmastered').textContent = counts['new'] + counts['learning'];
   document.getElementById('statLearning').textContent = counts['learning'];
   document.getElementById('statMastered').textContent = counts['mastered'];
-  renderReviewList();
   updateMyDataUI();
 }
