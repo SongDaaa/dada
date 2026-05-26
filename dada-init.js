@@ -102,6 +102,19 @@ function init() {
     document.getElementById('btnDunno').addEventListener('click', handleDunno);
   }, 'studyBtns');
 
+  // Auth bindings
+  safe(function() {
+    document.getElementById('btnLogin').addEventListener('click', function() {
+      if (currentUser) { logout(); } else { showAuthModal('login'); }
+    });
+    document.getElementById('btnAuthCancel').addEventListener('click', hideAuthModal);
+    document.getElementById('btnAuthSubmit').addEventListener('click', handleAuthSubmit);
+    document.getElementById('authModeLink').addEventListener('click', toggleAuthMode);
+    document.getElementById('authPassword').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') handleAuthSubmit();
+    });
+  }, 'authBindings');
+
   // Check-in button
   safe(function() {
     document.getElementById('btnCheckIn').addEventListener('click', checkIn);
@@ -330,6 +343,7 @@ function init() {
   safe(function(){showCard();},'showCard');
   safe(function(){updateAllUI();},'updateUI');
   safe(function(){startLearnTimer();},'timer');
+  safe(function(){checkAuth();},'checkAuth');
 
   // Final status
   el.textContent = errLog.length > 0 ? 'ERRS(' + errLog.length + '): ' + errLog.join(' | ') : 'DADA OK';
