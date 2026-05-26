@@ -81,6 +81,13 @@ function updateMyDataUI() {
   if (ws) ws.textContent = stats.wordsStudied || 0;
 }
 
+function updateMyDataTimes() {
+  var tt = document.getElementById('mdTodayTime');
+  var ttl = document.getElementById('mdTotalTime');
+  if (tt) { var m = Math.floor((stats.dailyTime || 0) / 60); var s = (stats.dailyTime || 0) % 60; tt.textContent = m + ':' + (s < 10 ? '0' : '') + s; }
+  if (ttl) { var tm = Math.floor((stats.totalTime || 0) / 3600); var tr = Math.floor(((stats.totalTime || 0) % 3600) / 60); ttl.textContent = tm + '时' + tr + '分'; }
+}
+
 function updateStreakUI() {
   document.getElementById('streakDisplay').textContent = '🔥 ' + stats.streak + '天';
 }
@@ -94,6 +101,7 @@ function startLearnTimer() {
     stats.dailyTime = learnSeconds;
     stats.totalTime = (stats.totalTime || 0) + 1;
     updateTimerUI();
+    updateMyDataTimes();
   }, 1000);
 }
 
