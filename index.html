@@ -120,6 +120,7 @@
     </div>
     <div class="quiz-card">
       <div class="quiz-word" id="quizWord">word</div>
+      <button class="speak-inline" id="quizSpeakBtn" title="发音" onclick="if(quizWord) try{speak(quizWord.en)}catch(e){}">🔊</button>
       <div class="quiz-opts" id="quizOpts"></div>
       <div id="quizSpellArea" style="display:none;">
         <button class="btn-listen" id="btnListenAgain">🔊 再听一次</button><br>
@@ -205,6 +206,7 @@
     <div style="text-align:center;color:var(--sub);font-size:13px;margin-bottom:8px;" id="challengeCount">0/20</div>
     <div class="quiz-card" id="challengeCard">
       <div class="quiz-word" id="challengeWord"></div>
+      <button class="speak-inline" id="challengeSpeakBtn" title="发音" onclick="speakChallengeWord()">🔊</button>
       <div class="quiz-opts" id="challengeOpts"></div>
     </div>
     <div id="challengeResult"></div>
@@ -224,6 +226,7 @@
     <div class="swipe-container">
       <div class="swipe-card" id="swipeCard">
         <span class="swipe-category" id="swipeCategory" style="display:none;"></span>
+        <button class="speak-inline swipe-speak" id="swipeSpeakBtn" title="发音" onclick="var id=swipeQueue[swipeIdx];if(id&&words[id])try{speak(words[id].en)}catch(e){}">🔊</button>
         <div class="swipe-word" id="swipeWord"></div>
         <div class="swipe-phonetic" id="swipePhonetic"></div>
       </div>
