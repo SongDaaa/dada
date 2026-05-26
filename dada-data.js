@@ -4,7 +4,7 @@
 var STORAGE_KEY = 'dada_vocab';
 var STATS_KEY = 'dada_stats';
 var words = {};
-var stats = { streak: 0, lastStudyDate: '', totalTime: 0, dailyTime: 0, wordsStudied: 0, todayDate: '', checkInDate: '', checkInStreak: 0, totalStudyDays: 0 };
+var stats = { streak: 0, lastStudyDate: '', totalTime: 0, dailyTime: 0, wordsStudied: 0, todayDate: '', checkInDate: '', checkInStreak: 0, totalStudyDays: 0, checkInDates: {}, makeUpCards: 0 };
 var EBBINGHAUS = [1, 2, 4, 7, 15];
 var dailyLimit = parseInt(localStorage.getItem('dada_daily_limit') || '20');
 var studyBook = localStorage.getItem('dada_study_book') || 'all';
@@ -17,11 +17,17 @@ var confirmCallback = null;
 function loadStats() {
   try {
     var raw = localStorage.getItem(STATS_KEY);
-    stats = raw ? JSON.parse(raw) : { streak: 0, lastStudyDate: '', totalTime: 0, dailyTime: 0, wordsStudied: 0, todayDate: '', checkInDate: '', checkInStreak: 0, totalStudyDays: 0 };
+    stats = raw ? JSON.parse(raw) : { streak: 0, lastStudyDate: '', totalTime: 0, dailyTime: 0, wordsStudied: 0, todayDate: '', checkInDate: '', checkInStreak: 0, totalStudyDays: 0, checkInDates: {}, makeUpCards: 0 };
     if (stats.checkInDate === undefined) stats.checkInDate = '';
     if (stats.checkInStreak === undefined) stats.checkInStreak = 0;
     if (stats.totalStudyDays === undefined) stats.totalStudyDays = 0;
-  } catch(e) { stats = { streak: 0, lastStudyDate: '', totalTime: 0, dailyTime: 0, wordsStudied: 0, todayDate: '', checkInDate: '', checkInStreak: 0, totalStudyDays: 0 }; }
+    if (stats.checkInDates === undefined) stats.checkInDates = {};
+    if (stats.makeUpCards === undefined) stats.makeUpCards = 0;
+    // Migrate old checkInDate to checkInDates
+    if (stats.checkInDate && !stats.checkInDates[stats.checkInDate]) {
+      stats.checkInDates[stats.checkInDate] = true;
+    }
+  } catch(e) { stats = { streak: 0, lastStudyDate: '', totalTime: 0, dailyTime: 0, wordsStudied: 0, todayDate: '', checkInDate: '', checkInStreak: 0, totalStudyDays: 0, checkInDates: {}, makeUpCards: 0 }; }
 }
 
 function saveStats() { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); try { markSyncDirty(); } catch(e) {} }
@@ -44,30 +50,106 @@ function setupDailyStreak() {
 
 function checkIn() {
   var today = new Date().toISOString().slice(0,10);
-  if (stats.checkInDate === today) { toast('今日已打卡 ✓'); return; }
+  if (stats.checkInDates[today]) { toast('今日已打卡 ✓'); return; }
   var yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
-  if (stats.checkInDate === yesterday) { stats.checkInStreak = (stats.checkInStreak || 0) + 1; }
+  if (stats.checkInDates[yesterday]) { stats.checkInStreak = (stats.checkInStreak || 0) + 1; }
   else if (stats.checkInDate !== today) { stats.checkInStreak = 1; }
   stats.checkInDate = today;
+  stats.checkInDates[today] = true;
+  // Every 7-day streak earns 1 make-up card
+  if (stats.checkInStreak > 0 && stats.checkInStreak % 7 === 0) {
+    stats.makeUpCards = (stats.makeUpCards || 0) + 1;
+    saveStats();
+    updateCheckInUI();
+    toast('打卡成功！连续 ' + stats.checkInStreak + ' 天 🔥 获得1张补签卡！');
+    return;
+  }
   saveStats();
   updateCheckInUI();
   toast('打卡成功！已连续 ' + stats.checkInStreak + ' 天 🔥');
 }
 
+function makeUpCheckIn(dateStr) {
+  if (!stats.makeUpCards || stats.makeUpCards <= 0) {
+    toast('没有补签卡了 🎫 连续打卡7天可获得1张');
+    return;
+  }
+  if (stats.checkInDates[dateStr]) { toast('该日期已打卡'); return; }
+  var today = new Date().toISOString().slice(0,10);
+  if (dateStr >= today) { toast('只能补打过去的日期'); return; }
+  stats.makeUpCards--;
+  stats.checkInDates[dateStr] = true;
+  saveStats();
+  updateCheckInUI();
+  toast('补打卡成功：' + dateStr + '（剩余补签卡 ' + stats.makeUpCards + ' 张）');
+}
+
+var calYear = 0, calMonth = 0;
+
 function updateCheckInUI() {
   var today = new Date().toISOString().slice(0,10);
   var el = document.getElementById('checkInStatus');
   var btn = document.getElementById('btnCheckIn');
-  if (!el || !btn) return;
-  if (stats.checkInDate === today) {
-    btn.textContent = '✅ 已打卡';
-    btn.classList.add('btn-done');
-    el.textContent = '连续 ' + (stats.checkInStreak || 1) + ' 天';
-  } else {
-    btn.textContent = '📅 打卡';
-    btn.classList.remove('btn-done');
-    el.textContent = stats.checkInStreak > 0 ? '上次连续 ' + stats.checkInStreak + ' 天' : '';
+  if (el && btn) {
+    if (stats.checkInDates[today]) {
+      btn.textContent = '✅ 已打卡';
+      btn.classList.add('btn-done');
+      el.textContent = '连续 ' + (stats.checkInStreak || 1) + ' 天';
+    } else {
+      btn.textContent = '📅 打卡';
+      btn.classList.remove('btn-done');
+      el.textContent = stats.checkInStreak > 0 ? '上次连续 ' + stats.checkInStreak + ' 天' : '';
+    }
   }
+  var badge = document.getElementById('makeUpBadge');
+  if (badge) badge.textContent = '🎫 x' + (stats.makeUpCards || 0);
+  // Init calendar to current month
+  var d = new Date();
+  if (calYear === 0) { calYear = d.getFullYear(); calMonth = d.getMonth() + 1; }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  var grid = document.getElementById('calGrid');
+  var title = document.getElementById('calMonthTitle');
+  if (!grid || !title) return;
+  title.textContent = calYear + '年' + calMonth + '月';
+  var today = new Date().toISOString().slice(0,10);
+  var daysInMonth = new Date(calYear, calMonth, 0).getDate();
+  var firstDow = new Date(calYear, calMonth - 1, 1).getDay(); // 0=Sun
+
+  var html = '<div class="cal-dow">日</div><div class="cal-dow">一</div><div class="cal-dow">二</div><div class="cal-dow">三</div><div class="cal-dow">四</div><div class="cal-dow">五</div><div class="cal-dow">六</div>';
+
+  // Empty cells before first day
+  for (var i = 0; i < firstDow; i++) {
+    html += '<div class="cal-cell cal-empty"></div>';
+  }
+
+  for (var d = 1; d <= daysInMonth; d++) {
+    var ds = calYear + '-' + String(calMonth).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    var cls = 'cal-cell';
+    var title = '';
+    if (stats.checkInDates[ds]) { cls += ' cal-done'; title = '已打卡'; }
+    else if (ds < today) { cls += ' cal-missed'; title = '漏打卡（点击补打）'; }
+    if (ds === today) { cls += ' cal-today'; }
+    var onclick = '';
+    if (!stats.checkInDates[ds] && ds < today) {
+      onclick = ' onclick="showMakeUpConfirm(\'' + ds + '\')"';
+    }
+    html += '<div class="' + cls + '" title="' + title + '"' + onclick + '>' + d + '</div>';
+  }
+
+  grid.innerHTML = html;
+}
+
+function showMakeUpConfirm(dateStr) {
+  if (!stats.makeUpCards || stats.makeUpCards <= 0) {
+    toast('没有补签卡了 🎫 连续打卡7天可获得1张');
+    return;
+  }
+  showConfirm('补打卡', '使用 1 张补签卡补打 ' + dateStr + ' ？<br><small style="color:var(--sub);">剩余补签卡：' + stats.makeUpCards + ' 张</small>', function() {
+    makeUpCheckIn(dateStr);
+  });
 }
 
 function updateMyDataUI() {
