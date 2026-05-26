@@ -118,6 +118,24 @@ main { max-width:700px; margin:0 auto; padding:20px 16px 80px; }
 #authUsername:focus, #authPassword:focus { border-color:var(--accent); }
 #authModeLink:hover { color:var(--accent); }
 
+/* ── Swipe Mode ── */
+.swipe-stats { display:flex; gap:16px; justify-content:center; margin-bottom:12px; font-size:13px; color:var(--sub); }
+.swipe-container { display:flex; justify-content:center; align-items:center; min-height:320px; margin:0 auto; max-width:400px; overflow:hidden; }
+.swipe-card { background:var(--card); border-radius:var(--radius); padding:40px 24px; box-shadow:var(--shadow); text-align:center; width:100%; cursor:grab; user-select:none; position:relative; transition:transform .3s ease,opacity .3s ease; }
+.swipe-card:active { cursor:grabbing; }
+.swipe-category { position:absolute; top:12px; left:16px; font-size:11px; color:var(--sub); background:var(--bg); padding:2px 10px; border-radius:10px; }
+.swipe-word { font-size:36px; font-weight:700; letter-spacing:1px; }
+.swipe-phonetic { font-size:16px; color:var(--sub); margin-top:6px; font-style:italic; }
+.swipe-hints { display:flex; justify-content:space-between; margin-top:16px; color:var(--sub); font-size:12px; max-width:400px; margin-left:auto; margin-right:auto; }
+.swipe-hint-right { box-shadow:0 0 20px rgba(90,158,111,.3); }
+.swipe-hint-left { box-shadow:0 0 20px rgba(224,123,90,.3); }
+.swipe-left { border-left:4px solid var(--accent); }
+.swipe-right { border-right:4px solid var(--accent2); }
+
+/* ── Challenge Mode ── */
+#challengeHearts { letter-spacing:4px; }
+#challengeWord small { display:block; margin-top:4px; }
+
 @media (max-width:480px) {
   .card-wrap { height:240px; }
   .card-word { font-size:28px; }
