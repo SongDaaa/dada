@@ -114,6 +114,10 @@ main { max-width:700px; margin:0 auto; padding:20px 16px 80px; }
 .mydata-row { display:flex; justify-content:space-between; padding:6px 0; font-size:13px; border-bottom:1px solid #f5f0eb; }
 .mydata-row:last-child { border-bottom:none; }
 .mydata-row span { color:var(--sub); }
+/* Auth modal inputs */
+#authUsername:focus, #authPassword:focus { border-color:var(--accent); }
+#authModeLink:hover { color:var(--accent); }
+
 @media (max-width:480px) {
   .card-wrap { height:240px; }
   .card-word { font-size:28px; }
