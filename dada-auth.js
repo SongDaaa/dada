@@ -121,8 +121,10 @@ function startAutoSync() {
 
 function updateAuthUI() {
   var loginBtn = document.getElementById('btnLogin');
+  var adminBtn = document.getElementById('navAdmin');
   if (currentUser) {
     if (loginBtn) loginBtn.textContent = currentUser.username + ' ▾';
+    if (adminBtn) adminBtn.style.display = currentUser.is_admin ? '' : 'none';
     startAutoSync();
     // Initial sync: pull from server
     syncToServer().then(function() {
@@ -130,6 +132,7 @@ function updateAuthUI() {
     });
   } else {
     if (loginBtn) loginBtn.textContent = '登录';
+    if (adminBtn) adminBtn.style.display = 'none';
     if (syncTimer) { clearInterval(syncTimer); syncTimer = null; }
   }
 }
