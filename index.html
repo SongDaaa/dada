@@ -14,6 +14,7 @@
 <script src="dada-auth.js?v=13" defer></script>
 <script src="dada-challenge.js?v=13" defer></script>
 <script src="dada-swipe.js?v=13" defer></script>
+<script src="dada-admin.js?v=13" defer></script>
 <script src="dada-ui.js?v=13" defer></script>
 <script src="dada-init.js?v=13" defer></script>
 </head>
@@ -49,6 +50,7 @@
     <button data-page="swipe">刷词</button>
     <button data-page="challenge">挑战</button>
     <button data-page="bank">词库</button>
+    <button data-page="admin" id="navAdmin" style="display:none;">管理</button>
   </nav>
 </header>
 
@@ -247,6 +249,17 @@
     <div id="swipeDone" style="text-align:center;padding:32px;"></div>
     <div style="text-align:center;margin-top:8px;">
       <button class="btn btn-p" id="btnSwipeRestart" style="display:none;" onclick="restartSwipe()">🔄 再来一轮</button>
+    </div>
+  </section>
+
+  <!-- Admin Page -->
+  <section class="page" id="page-admin">
+    <h3 style="margin-bottom:12px;">👑 管理面板</h3>
+    <div style="margin-bottom:12px;">
+      <button class="btn btn-p btn-sm" onclick="loadAdminUsers()">🔄 刷新数据</button>
+    </div>
+    <div id="adminContent">
+      <p style="text-align:center;color:var(--sub);padding:40px;">点击刷新加载用户数据</p>
     </div>
   </section>
 </main>
