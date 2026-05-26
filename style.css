@@ -141,6 +141,9 @@ main { max-width:700px; margin:0 auto; padding:20px 16px 80px; }
 #challengeHearts { letter-spacing:4px; }
 #challengeWord small { display:block; margin-top:4px; }
 
+/* ── Admin ── */
+#page-admin h3 { color:var(--accent); }
+
 /* ── Word Bank ── */
 .add-form { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
 .add-form input { padding:10px 14px; border:2px solid #e8e3dd; border-radius:22px; font-size:14px; outline:none; }
