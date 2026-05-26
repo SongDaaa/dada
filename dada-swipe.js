@@ -67,6 +67,22 @@ function renderSwipeCard() {
   document.getElementById('swipeWord').textContent = w.en;
   document.getElementById('swipePhonetic').textContent = w.phonetic || '';
 
+  try { speak(w.en); } catch(e) {}
+
+  // Reset reveal state
+  swipeRevealState = false;
+  var card = document.getElementById('swipeCard');
+  card.style.borderLeft = '';
+  card.className = 'swipe-card';
+
+  // Click zones on card: left half = don't know, right half = know
+  card.onclick = function(e) {
+    var rect = card.getBoundingClientRect();
+    var mid = rect.left + rect.width / 2;
+    if (e.clientX < mid) doSwipe('left');
+    else doSwipe('right');
+  };
+
   // Show category badge
   var cat = document.getElementById('swipeCategory');
   if (w.category) {
@@ -85,42 +101,63 @@ function updateSwipeStats() {
 
 // ── Swipe Action ──
 
+var swipeRevealState = false; // true = showing answer, waiting for tap to continue
+
 function doSwipe(direction) {
   if (swipeIdx >= swipeQueue.length) return;
-
   var id = swipeQueue[swipeIdx];
   var w = words[id];
   if (!w) return;
 
-  var card = document.getElementById('swipeCard');
-  var rotate = direction === 'right' ? 20 : -20;
-  var translate = direction === 'right' ? 200 : -200;
+  // If already showing answer, advance to next
+  if (swipeRevealState) {
+    swipeRevealState = false;
+    swipeIdx++;
+    updateSwipeStats();
+    saveWords();
+    renderSwipeCard();
+    return;
+  }
 
-  // Animate card out
-  card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-  card.style.transform = 'translateX(' + translate + 'px) rotate(' + rotate + 'deg)';
-  card.style.opacity = '0.5';
-
+  // First tap: record answer and show result
   if (direction === 'right') {
-    // Know: advance Ebbinghaus
     scheduleReview(id, w.reviews ? w.reviews.length : 0);
     swipeKnown++;
-    card.classList.add('swipe-right');
   } else {
-    // Don't know: mark for review tomorrow
     if (!w.nextReview) w.nextReview = Date.now() + 86400000;
     w.status = 'learning';
     swipeUnknown++;
-    card.classList.add('swipe-left');
   }
-
-  saveWords();
-  swipeIdx++;
   updateSwipeStats();
 
-  setTimeout(function() {
-    renderSwipeCard();
-  }, 300);
+  // Reveal the answer
+  swipeRevealState = true;
+  showSwipeAnswer(id, direction);
+}
+
+function showSwipeAnswer(id, direction) {
+  var w = words[id];
+  var card = document.getElementById('swipeCard');
+  var isKnown = direction === 'right';
+
+  card.style.transition = 'transform 0.2s ease';
+  card.style.transform = 'scale(1.02)';
+  card.className = 'swipe-card swipe-reveal';
+  card.style.borderLeft = isKnown ? '4px solid var(--accent2)' : '4px solid var(--accent)';
+
+  card.onclick = function(e) {
+    doSwipe(direction); // second click advances
+  };
+
+  document.getElementById('swipeWord').textContent = w.en;
+  document.getElementById('swipePhonetic').textContent = w.phonetic || '';
+
+  var resultHtml = '<div class="swipe-reveal-content">' +
+    '<div style="font-size:28px;font-weight:700;color:var(--text);margin-bottom:4px;">' + w.zh + '</div>' +
+    '<div style="margin-top:12px;font-size:12px;color:var(--sub);">点击继续下一个</div>' +
+    '</div>';
+
+  document.getElementById('swipePhonetic').innerHTML = resultHtml;
 }
 
 // ── Done ──
