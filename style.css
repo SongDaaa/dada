@@ -108,8 +108,17 @@ main { max-width:700px; margin:0 auto; padding:20px 16px 80px; }
 .book-card .bc-subs { font-size:11px; color:var(--sub); margin-top:2px; }
 #bookDetailBar { display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:12px; padding:8px 0; }
 .card-nav { display:flex; justify-content:space-between; align-items:center; margin-top:8px; gap:8px; }
-.checkin-area { text-align:center; margin-top:12px; display:flex; align-items:center; justify-content:center; gap:8px; }
+.checkin-area { text-align:center; margin-top:12px; }
 .checkin-area span { font-size:12px; color:var(--sub); }
+.cal-nav { display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:8px; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; max-width:280px; margin:0 auto; font-size:12px; }
+.cal-dow { padding:4px 0; color:var(--sub); font-weight:600; text-align:center; }
+.cal-cell { padding:6px 0; text-align:center; border-radius:6px; cursor:default; transition:.15s; }
+.cal-empty { }
+.cal-done { background:var(--accent2); color:#fff; font-weight:600; }
+.cal-missed { color:var(--sub); cursor:pointer; }
+.cal-missed:hover { background:#f0e8e0; }
+.cal-today { box-shadow:inset 0 0 0 2px var(--accent); font-weight:700; }
 .mydata-panel { margin-top:14px; background:var(--card); border-radius:var(--radius); padding:0; box-shadow:var(--shadow); overflow:hidden; }
 .mydata-header { padding:10px 16px; font-size:14px; font-weight:600; color:var(--accent); cursor:pointer; user-select:none; display:flex; justify-content:space-between; }
 .mydata-body { padding:0 16px 12px; }
