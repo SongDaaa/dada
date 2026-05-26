@@ -120,6 +120,18 @@ function init() {
     document.getElementById('btnCheckIn').addEventListener('click', checkIn);
   }, 'checkInBtn');
 
+  // Calendar navigation
+  safe(function() {
+    document.getElementById('calPrev').addEventListener('click', function() {
+      calMonth--; if (calMonth < 1) { calMonth = 12; calYear--; }
+      renderCalendar();
+    });
+    document.getElementById('calNext').addEventListener('click', function() {
+      calMonth++; if (calMonth > 12) { calMonth = 1; calYear++; }
+      renderCalendar();
+    });
+  }, 'calNav');
+
   // MyData toggle
   safe(function() {
     document.getElementById('mydataToggle').addEventListener('click', function() {
