@@ -724,3 +724,10 @@ function getEtymologyHint(word) {
 function restartChallenge() {
   buildChallenge();
 }
+
+function speakChallengeWord() {
+  if (challengeIdx < challengeWords.length) {
+    var w = words[challengeWords[challengeIdx]];
+    if (w) try { speak(w.en); } catch(e) {}
+  }
+}
