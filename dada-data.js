@@ -24,7 +24,7 @@ function loadStats() {
   } catch(e) { stats = { streak: 0, lastStudyDate: '', totalTime: 0, dailyTime: 0, wordsStudied: 0, todayDate: '', checkInDate: '', checkInStreak: 0, totalStudyDays: 0 }; }
 }
 
-function saveStats() { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); }
+function saveStats() { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); try { markSyncDirty(); } catch(e) {} }
 
 function setupDailyStreak() {
   var today = new Date().toISOString().slice(0,10);
@@ -118,7 +118,7 @@ function loadWords() {
   try { updateAllUI(); } catch(e) {}
 }
 
-function saveWords() { localStorage.setItem(STORAGE_KEY, JSON.stringify(words)); }
+function saveWords() { localStorage.setItem(STORAGE_KEY, JSON.stringify(words)); try { markSyncDirty(); } catch(e) {} }
 
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
