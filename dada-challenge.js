@@ -97,6 +97,8 @@ function renderChallengeCard() {
     document.getElementById('challengeWord').innerHTML = w.en + ' <small style="font-size:16px;color:var(--sub);">' + w.phonetic + '</small>';
   }
 
+  try { speak(w.en); } catch(e) {}
+
   // Generate 4 options: 1 correct + 3 distractors from same category or random
   var correctZh = w.zh;
   var distractors = buildDistractors(id, correctZh);
