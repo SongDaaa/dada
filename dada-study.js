@@ -128,9 +128,11 @@ function generateQuiz() {
     if (quizWord.phonetic) qWordEl.innerHTML = quizWord.en + '<br><small style="color:var(--sub);font-size:16px;">' + quizWord.phonetic + '</small>';
     else qWordEl.textContent = quizWord.en;
     renderEn2ZhOpts(pool, correctIdx, quizWord.zh);
+    try { speak(quizWord.en); } catch(e) {}
   } else if (quizMode === 'zh2en') {
     qWordEl.textContent = quizWord.zh;
     renderZh2EnOpts(pool, correctIdx, quizWord.en);
+    try { speak(quizWord.en); } catch(e) {}
   } else if (quizMode === 'spell') {
     qWordEl.textContent = '🔊 听音拼写';
     document.getElementById('spellingInput').value = '';
