@@ -7,13 +7,15 @@
 <meta name="theme-color" content="#e07b5a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DADA背单词">
-<link rel="stylesheet" href="style.css?v=11">
-<script src="dada-data.js?v=11" defer></script>
-<script src="dada-speech.js?v=11" defer></script>
-<script src="dada-study.js?v=11" defer></script>
-<script src="dada-auth.js?v=11" defer></script>
-<script src="dada-ui.js?v=11" defer></script>
-<script src="dada-init.js?v=11" defer></script>
+<link rel="stylesheet" href="style.css?v=12">
+<script src="dada-data.js?v=12" defer></script>
+<script src="dada-speech.js?v=12" defer></script>
+<script src="dada-study.js?v=12" defer></script>
+<script src="dada-auth.js?v=12" defer></script>
+<script src="dada-challenge.js?v=12" defer></script>
+<script src="dada-swipe.js?v=12" defer></script>
+<script src="dada-ui.js?v=12" defer></script>
+<script src="dada-init.js?v=12" defer></script>
 </head>
 <body>
 <div id="loadStatus" style="position:fixed;top:4px;right:8px;font-size:11px;color:#aaa;z-index:999;">loading...</div>
@@ -185,6 +187,51 @@
       <input type="file" id="importFileInput" accept=".json" style="display:none;">
       <button class="btn btn-s btn-sm" id="btnImportCSVFile">📥 导入CSV文件</button>
       <input type="file" id="importCSVFileInput" accept=".csv,.txt" style="display:none;">
+    </div>
+  </section>
+
+  <!-- Challenge Page -->
+  <section class="page" id="page-challenge">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+      <span id="challengeHearts" style="font-size:24px;">❤️❤️❤️</span>
+      <span style="font-size:13px;color:var(--sub);">🏆 连胜 <b id="challengeStreakBadge">0</b> 天</span>
+    </div>
+    <div style="background:#e8e3dd;border-radius:8px;height:8px;margin-bottom:16px;">
+      <div id="challengeBar" style="background:var(--accent);height:100%;border-radius:8px;width:0;transition:width .3s;"></div>
+    </div>
+    <div style="text-align:center;color:var(--sub);font-size:13px;margin-bottom:8px;" id="challengeCount">0/20</div>
+    <div class="quiz-card" id="challengeCard">
+      <div class="quiz-word" id="challengeWord"></div>
+      <div class="quiz-opts" id="challengeOpts"></div>
+    </div>
+    <div id="challengeResult"></div>
+    <div style="text-align:center;margin-top:16px;">
+      <button class="btn btn-p" id="btnRestartChallenge" style="display:none;" onclick="restartChallenge()">🔄 再来一次</button>
+      <button class="btn btn-s" id="btnChallengeDone" style="display:none;" onclick="switchPage('study')">返回学习</button>
+    </div>
+  </section>
+
+  <!-- Swipe Page -->
+  <section class="page" id="page-swipe">
+    <div class="swipe-stats">
+      <span>📖 已刷 <b id="swipeTotal">0</b></span>
+      <span style="color:var(--accent2);">✅ <b id="swipeKnownCount">0</b></span>
+      <span style="color:#d44;">❌ <b id="swipeUnknownCount">0</b></span>
+    </div>
+    <div class="swipe-container">
+      <div class="swipe-card" id="swipeCard">
+        <span class="swipe-category" id="swipeCategory" style="display:none;"></span>
+        <div class="swipe-word" id="swipeWord"></div>
+        <div class="swipe-phonetic" id="swipePhonetic"></div>
+      </div>
+    </div>
+    <div class="swipe-hints">
+      <span>← 不认识</span>
+      <span>认识 →</span>
+    </div>
+    <div id="swipeDone" style="text-align:center;padding:32px;"></div>
+    <div style="text-align:center;margin-top:8px;">
+      <button class="btn btn-p" id="btnSwipeRestart" style="display:none;" onclick="restartSwipe()">🔄 再来一轮</button>
     </div>
   </section>
 </main>
