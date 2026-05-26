@@ -57,6 +57,7 @@ main { max-width:700px; margin:0 auto; padding:20px 16px 80px; }
 .settings-row input[type=range] { width:100px; accent-color:var(--accent); }
 .settings-row select { padding:4px 8px; border:2px solid #e8e3dd; border-radius:14px; font-size:13px; outline:none; background:var(--card); }
 
+
 /* ── Card ── */
 .card-wrap { perspective:800px; width:100%; max-width:420px; height:280px; margin:20px auto; cursor:pointer; }
 .card-inner { position:relative; width:100%; height:100%; transition:transform .5s cubic-bezier(.4,0,.2,1); transform-style:preserve-3d; }
@@ -107,6 +108,8 @@ main { max-width:700px; margin:0 auto; padding:20px 16px 80px; }
 .mydata-row { display:flex; justify-content:space-between; padding:6px 0; font-size:13px; border-bottom:1px solid #f5f0eb; }
 .mydata-row:last-child { border-bottom:none; }
 .mydata-row span { color:var(--sub); }
+.week-chart { padding:8px 0 4px; }
+.week-bars { display:flex; align-items:flex-end; gap:2px; margin-top:4px; min-height:50px; }
 
 /* ── Quiz / Challenge ── */
 .quiz-card { background:var(--card); border-radius:var(--radius); padding:32px 24px; box-shadow:var(--shadow); text-align:center; max-width:440px; margin:0 auto; }
@@ -140,6 +143,17 @@ main { max-width:700px; margin:0 auto; padding:20px 16px 80px; }
 /* ── Challenge ── */
 #challengeHearts { letter-spacing:4px; }
 #challengeWord small { display:block; margin-top:4px; }
+.challenge-heart-pop { animation: heartPop .4s ease; }
+@keyframes heartPop { 0%,100% { transform:scale(1); } 50% { transform:scale(1.4); } }
+.quiz-opt.correct { border-color:var(--accent2); background:#e8f5e0; animation:pulseGreen .4s ease; }
+.quiz-opt.wrong { border-color:#d44; background:#ffeaea; animation:shake .5s ease; }
+@keyframes pulseGreen { 0%,100% { transform:scale(1); } 50% { transform:scale(1.03); } }
+@keyframes shake { 0%,100% { transform:translateX(0); } 25% { transform:translateX(-6px); } 50% { transform:translateX(6px); } 75% { transform:translateX(-4px); } }
+#challengeCard { transition:opacity .25s ease; }
+#challengeCard.fade-out { opacity:0; transform:scale(0.95); }
+#challengeCard.fade-in { animation:fadeIn .3s ease; }
+.challenge-confetti { position:fixed; z-index:300; pointer-events:none; animation:confettiFall 3s ease-out forwards; font-size:28px; }
+@keyframes confettiFall { 0% { opacity:1; transform:translateY(-20px) rotate(0deg); } 100% { opacity:0; transform:translateY(100vh) rotate(720deg); } }
 
 /* ── Admin ── */
 #page-admin h3 { color:var(--accent); }
@@ -193,8 +207,47 @@ main { max-width:700px; margin:0 auto; padding:20px 16px 80px; }
 .toast.show { opacity:1; }
 
 /* ── Auth ── */
-#authUsername:focus, #authPassword:focus { border-color:var(--accent); }
-#authModeLink:hover { color:var(--accent); }
+#authUsername:focus, #authPassword:focus, #authEmail:focus, #authCode:focus, #authNewPassword:focus { border-color:var(--accent); }
+#authModeLink:hover, #authForgotLink:hover { color:var(--accent); }
+#btnSendCode.sending { background:#c8c8c8; color:#888; cursor:default; }
+
+/* ── Dark Mode ── */
+html.dark-mode { --bg: #1a1a2e; --card: #25253a; --text: #e0dcd0; --sub: #999; --shadow: 0 2px 12px rgba(0,0,0,.25); }
+html.dark-mode body { background:var(--bg); color:var(--text); }
+html.dark-mode .card-front { background:var(--card); }
+html.dark-mode .quiz-card,
+html.dark-mode .swipe-card,
+html.dark-mode .book-card,
+html.dark-mode .stat,
+html.dark-mode .settings-bar,
+html.dark-mode .cal-summary,
+html.dark-mode .mydata-panel { background:var(--card); }
+html.dark-mode nav button:not(.active) { color:#aaa; }
+html.dark-mode nav button:hover:not(.active) { background:#333; }
+html.dark-mode .quiz-opt { border-color:#444; background:#2a2a40; color:#ddd; }
+html.dark-mode .quiz-opt:hover { border-color:var(--accent); background:#333; }
+html.dark-mode .quiz-opt.correct { border-color:var(--accent2); background:#1a3320; }
+html.dark-mode .quiz-opt.wrong { border-color:#d44; background:#331a1a; }
+html.dark-mode .word-table th { color:#999; border-color:#333; }
+html.dark-mode .word-table td { border-color:#2a2a3a; }
+html.dark-mode .word-table tr:hover td { background:#2a2a3a; }
+html.dark-mode .add-form input,
+html.dark-mode .toolbar input[type=text],
+html.dark-mode .settings-row select,
+html.dark-mode textarea { background:#2a2a40; border-color:#444; color:#ddd; }
+html.dark-mode .btn-s { background:#3a3a50; color:#ddd; }
+html.dark-mode .btn-s:hover { background:#4a4a60; }
+html.dark-mode .mydata-row { border-bottom-color:#2a2a3a; }
+html.dark-mode .backup-section { border-top-color:#2a2a3a; }
+html.dark-mode .cal-missed:hover { background:#333; }
+html.dark-mode .challenge-bar-bg { background:#333; }
+html.dark-mode #challengeBar { background:var(--accent); }
+html.dark-mode .speak-inline { background:#3a3a50; }
+html.dark-mode .speak-inline:hover { background:#4a4a60; }
+html.dark-mode .swipe-reveal { background:#2a2a3a; }
+.dark-toggle { background:none; border:none; cursor:pointer; font-size:18px; padding:4px 6px; border-radius:50%; transition:.2s; }
+.dark-toggle:hover { background:#e8e3dd; }
+html.dark-mode .dark-toggle:hover { background:#3a3a50; }
 
 @media (max-width:480px) {
   .card-wrap { height:240px; }

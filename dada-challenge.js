@@ -1,15 +1,55 @@
 // dada-challenge.js — 3条命挑战模式
 // Dependencies: dada-data.js (words, stats, EBBINGHAUS, scheduleReview, getDueReviewIds, shuffle, categoryLabel)
 
-var CHALLENGE_SIZE = 20;
+var CHALLENGE_SIZE = parseInt(localStorage.getItem('dada_csize') || '20');
 var MAX_LIVES = 3;
 var challengeWords = [];
 var challengeIdx = 0;
 var lives = MAX_LIVES;
 var challengeCorrect = 0;
-var challengeWrongWords = []; // words answered incorrectly
+var challengeWrongWords = [];
 var challengeStreak = parseInt(localStorage.getItem('dada_cstreak') || '0');
 var challengeDate = localStorage.getItem('dada_cdate') || '';
+var challengeRoundsToday = parseInt(localStorage.getItem('dada_crounds') || '0');
+var challengeRoundDate = localStorage.getItem('dada_crounddate') || '';
+
+// ── Setup ──
+
+function showChallengeSetup() {
+  // Reset round counter if new day
+  var today = new Date().toISOString().slice(0, 10);
+  if (challengeRoundDate !== today) {
+    challengeRoundsToday = 0;
+    challengeRoundDate = today;
+    localStorage.setItem('dada_crounds', '0');
+    localStorage.setItem('dada_crounddate', today);
+  }
+
+  document.getElementById('challengeSetup').style.display = '';
+  document.getElementById('challengeGame').style.display = 'none';
+  document.getElementById('challengeResult').innerHTML = '';
+  document.getElementById('challengeStreakBadge').textContent = challengeStreak;
+  document.getElementById('challengeRoundsToday').textContent = challengeRoundsToday;
+
+  // Highlight current size
+  document.querySelectorAll('.challenge-size-btn').forEach(function(b) {
+    b.classList.toggle('active', parseInt(b.dataset.size) === CHALLENGE_SIZE);
+  });
+}
+
+function setChallengeSize(size) {
+  CHALLENGE_SIZE = size;
+  localStorage.setItem('dada_csize', size);
+  document.querySelectorAll('.challenge-size-btn').forEach(function(b) {
+    b.classList.toggle('active', parseInt(b.dataset.size) === CHALLENGE_SIZE);
+  });
+}
+
+function startChallenge() {
+  document.getElementById('challengeSetup').style.display = 'none';
+  document.getElementById('challengeGame').style.display = '';
+  buildChallenge();
+}
 
 // ── Build ──
 
@@ -21,12 +61,10 @@ function buildChallenge() {
     return;
   }
 
-  // Priority: due reviews > learning > new > any
   var dueIds = getDueReviewIds();
   var ids = allIds.slice();
   shuffle(ids);
 
-  // Separate by status
   var due = [], learning = [], fresh = [], rest = [];
   for (var i = 0; i < ids.length; i++) {
     var w = words[ids[i]];
@@ -36,7 +74,6 @@ function buildChallenge() {
     else rest.push(ids[i]);
   }
 
-  // Assemble: due first, then learning, then new, then mastered
   challengeWords = [];
   var pools = [due, learning, fresh, rest];
   for (var p = 0; p < pools.length; p++) {
@@ -60,7 +97,7 @@ function buildChallenge() {
 function renderChallengeUI() {
   updateChallengeHearts();
   updateChallengeProgress();
-  document.getElementById('challengeStreakBadge').textContent = challengeStreak;
+  document.getElementById('challengeStreakBadge2').textContent = challengeStreak;
   document.getElementById('challengeResult').innerHTML = '';
   document.getElementById('challengeResult').style.display = 'none';
   document.getElementById('challengeCard').style.display = '';
@@ -115,6 +152,12 @@ function renderChallengeCard() {
   }
   document.getElementById('challengeOpts').innerHTML = html;
   document.getElementById('challengeOpts').style.display = '';
+
+  // Fade-in the card
+  var card = document.getElementById('challengeCard');
+  card.classList.remove('fade-out');
+  card.classList.add('fade-in');
+  setTimeout(function() { card.classList.remove('fade-in'); }, 300);
 }
 
 function buildDistractors(excludeId, correctZh) {
@@ -151,7 +194,7 @@ function handleChallengeClick(btn) {
   var id = challengeWords[challengeIdx];
   var w = words[id];
 
-  // Disable all buttons
+  // Disable all buttons and highlight correct/wrong
   var btns = document.querySelectorAll('#challengeOpts .quiz-opt');
   for (var i = 0; i < btns.length; i++) {
     btns[i].disabled = true;
@@ -159,21 +202,30 @@ function handleChallengeClick(btn) {
       btns[i].classList.add('correct');
     }
   }
+  // Clear options after a brief moment so styles don't carry over
+  var optsEl = document.getElementById('challengeOpts');
+  setTimeout(function() { optsEl.innerHTML = ''; }, 250);
 
   if (correct) {
     challengeCorrect++;
-    // Advance Ebbinghaus stage
     scheduleReview(id, w.reviews ? w.reviews.length : 0);
+    recordWordStudied();
     saveWords();
+    // Quick flash on the card
+    var card = document.getElementById('challengeCard');
+    card.classList.add('fade-out');
   } else {
     lives--;
     challengeWrongWords.push({ en: w.en, zh: w.zh, phonetic: w.phonetic });
-    // Reset to stage 0
     w.reviews = [];
     w.nextReview = Date.now() + 86400000;
     w.status = 'learning';
     saveWords();
     btn.classList.add('wrong');
+    // Heart pop animation
+    var hearts = document.getElementById('challengeHearts');
+    hearts.classList.add('challenge-heart-pop');
+    setTimeout(function() { hearts.classList.remove('challenge-heart-pop'); }, 400);
     updateChallengeHearts();
 
     if (lives <= 0) {
@@ -194,6 +246,13 @@ function handleChallengeClick(btn) {
 // ── Game Over ──
 
 function challengeGameOver() {
+  // Track round even on failure
+  var today = new Date().toISOString().slice(0, 10);
+  if (challengeRoundDate !== today) { challengeRoundsToday = 1; challengeRoundDate = today; }
+  else { challengeRoundsToday++; }
+  localStorage.setItem('dada_crounds', challengeRoundsToday);
+  localStorage.setItem('dada_crounddate', challengeRoundDate);
+
   document.getElementById('challengeCard').style.display = 'none';
   document.getElementById('btnRestartChallenge').style.display = '';
   document.getElementById('btnChallengeDone').style.display = '';
@@ -213,6 +272,7 @@ function challengeGameOver() {
 }
 
 function challengeVictory() {
+  spawnConfetti();
   document.getElementById('challengeCard').style.display = 'none';
   document.getElementById('btnRestartChallenge').style.display = '';
   document.getElementById('btnChallengeDone').style.display = '';
@@ -226,7 +286,18 @@ function challengeVictory() {
     localStorage.setItem('dada_cdate', challengeDate);
     streakUpdated = true;
   }
+  // Increment rounds today
+  if (challengeRoundDate !== today) {
+    challengeRoundsToday = 1;
+    challengeRoundDate = today;
+  } else {
+    challengeRoundsToday++;
+  }
+  localStorage.setItem('dada_crounds', challengeRoundsToday);
+  localStorage.setItem('dada_crounddate', challengeRoundDate);
+  document.getElementById('challengeRoundsToday').textContent = challengeRoundsToday;
   document.getElementById('challengeStreakBadge').textContent = challengeStreak;
+  document.getElementById('challengeStreakBadge2').textContent = challengeStreak;
 
   var perfect = challengeWrongWords.length === 0;
   var result = document.getElementById('challengeResult');
@@ -725,9 +796,29 @@ function restartChallenge() {
   buildChallenge();
 }
 
+// ── Init on page switch ──
+function initChallengePage() {
+  showChallengeSetup();
+}
+
 function speakChallengeWord() {
   if (challengeIdx < challengeWords.length) {
     var w = words[challengeWords[challengeIdx]];
     if (w) try { speak(w.en); } catch(e) {}
+  }
+}
+
+function spawnConfetti() {
+  var emojis = ['🎉', '✨', '🌟', '🏆', '💪', '🔥', '🎯', '⭐'];
+  for (var i = 0; i < 20; i++) {
+    var el = document.createElement('span');
+    el.className = 'challenge-confetti';
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left = Math.random() * 100 + '%';
+    el.style.top = -(Math.random() * 40) + 'px';
+    el.style.animationDelay = Math.random() * 0.8 + 's';
+    el.style.animationDuration = (2 + Math.random() * 2) + 's';
+    document.body.appendChild(el);
+    setTimeout(function() { el.remove(); }, 3500);
   }
 }

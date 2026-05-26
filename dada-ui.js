@@ -16,7 +16,7 @@ function switchPage(name) {
   var navBtn = document.querySelector('nav button[data-page="' + name + '"]');
   if (navBtn) navBtn.classList.add('active');
   if (name === 'bank') { wordTableOffset = 0; currentBookFilter = null; showBookCards(); }
-  if (name === 'challenge') { try { buildChallenge(); } catch(e) {} }
+  if (name === 'challenge') { try { initChallengePage(); } catch(e) {} }
   if (name === 'swipe') { try { buildSwipeQueue(); setupSwipeTouch(); setupSwipeKeyboard(); } catch(e) {} }
   if (name === 'admin') { stopLearnTimer(); saveStats(); loadAdminUsers(); return; }
   if (name === 'study') { buildStudyQueue(); showCard(); startLearnTimer(); }
@@ -106,6 +106,38 @@ function showBookDetail(cat) {
   });
 
   renderWordTable();
+
+  // Auto-sync if this category has very few words
+  var catWords = Object.values(words).filter(function(w) { return w.category === cat; });
+  if (catWords.length < 100) {
+    var labelMap = { cet4:'CET4', cet6:'CET6', ielts:'IELTS', ky:'KY', zsb:'ZSB' };
+    var fname = 'word_bank_' + (labelMap[cat] || cat) + '.json';
+    var syncedKey = 'dada_autosync_' + cat;
+    if (!localStorage.getItem(syncedKey)) {
+      loadBookFromServerAuto(cat, fname);
+      localStorage.setItem(syncedKey, '1');
+    }
+  }
+}
+
+function loadBookFromServerAuto(cat, fname) {
+  var url = 'word_banks/' + fname;
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url);
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      importJSONBatched(xhr.responseText, function(done, total) {
+        // silent progress
+      }, function(newCount, updatedCount) {
+        if (newCount >= 0) {
+          refreshBankView(); updateAllUI();
+          if (newCount > 0) toast('已自动加载 ' + newCount + ' 个单词');
+        }
+      });
+    }
+  };
+  xhr.onerror = function() { /* silent fail */ };
+  xhr.send();
 }
 
 function loadBookFromServer(cat, fname) {
@@ -223,4 +255,26 @@ function updateAllUI() {
   document.getElementById('statLearning').textContent = counts['learning'];
   document.getElementById('statMastered').textContent = counts['mastered'];
   updateMyDataUI();
+}
+
+// ── Print Word List ──
+function printWordList() {
+  var entries = Object.entries(words);
+  if (currentBookFilter) {
+    entries = entries.filter(function(e) { return e[1].category === currentBookFilter; });
+  }
+  var w = window.open('', '_blank', 'width=700,height=600');
+  var catLabel = currentBookFilter ? (categoryLabel(currentBookFilter) || '全部') : '全部词库';
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>DADA 单词表 - ' + catLabel + '</title>');
+  w.document.write('<style>body{font-family:Arial,sans-serif;padding:20px;color:#333;}h2{color:#e07b5a;}table{width:100%;border-collapse:collapse;margin-top:12px;}th{text-align:left;padding:8px;background:#f5f0eb;}td{padding:8px;border-bottom:1px solid #eee;font-size:14px;}@media print{button{display:none;}}</style>');
+  w.document.write('</head><body><h2>DADA 单词表 — ' + catLabel + '（共 ' + entries.length + ' 词）</h2>');
+  w.document.write('<button onclick="window.print()" style="padding:8px 20px;margin-bottom:12px;background:#e07b5a;color:#fff;border:none;border-radius:20px;font-size:14px;cursor:pointer;">🖨 打印 / 导出PDF</button>');
+  w.document.write('<table><thead><tr><th>#</th><th>英文</th><th>中文</th><th>音标</th><th>状态</th></tr></thead><tbody>');
+  var statusLabels = { 'new': '新学', 'learning': '学习中', 'mastered': '已掌握' };
+  entries.forEach(function(e, i) {
+    var word = e[1];
+    w.document.write('<tr><td>' + (i + 1) + '</td><td><b>' + word.en + '</b></td><td>' + word.zh + '</td><td style="color:#888;">' + (word.phonetic || '') + '</td><td>' + (statusLabels[word.status] || word.status) + '</td></tr>');
+  });
+  w.document.write('</tbody></table></body></html>');
+  w.document.close();
 }

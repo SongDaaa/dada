@@ -1,6 +1,14 @@
 // dada-init.js — Splash, PWA, initialization, event wiring
 // Dependencies: dada-data.js, dada-speech.js, dada-study.js, dada-ui.js
 
+// ── Dark Mode Init ──
+(function initDarkMode() {
+  var saved = localStorage.getItem('dada_dark_mode');
+  if (saved === '1' || (saved === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.classList.add('dark-mode');
+  }
+})();
+
 // ── Splash Screen ──
 (function initSplash() {
   var themes = ['theme-1','theme-2','theme-3','theme-4','theme-5'];
@@ -190,11 +198,35 @@ function init() {
     });
   }, 'studyBook');
 
+  // Challenge setup
+  safe(function() {
+    document.getElementById('btnStartChallenge').addEventListener('click', startChallenge);
+    document.querySelectorAll('.challenge-size-btn').forEach(function(b) {
+      b.addEventListener('click', function() { setChallengeSize(parseInt(b.dataset.size)); });
+    });
+  }, 'challengeSetup');
+
   // Study buttons
   safe(function() {
     document.getElementById('btnKnow').addEventListener('click', handleKnow);
     document.getElementById('btnDunno').addEventListener('click', handleDunno);
+    document.getElementById('btnToggleQuiz').addEventListener('click', toggleInlineQuiz);
+    document.getElementById('quizOpts').addEventListener('click', function(e) {
+      if (e.target.classList.contains('quiz-opt')) handleQuizClick(e.target);
+    });
+    document.getElementById('spellingInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') checkSpelling();
+    });
   }, 'studyBtns');
+
+  // Dark mode toggle
+  safe(function() {
+    document.getElementById('btnDarkMode').addEventListener('click', function() {
+      var html = document.documentElement;
+      var isDark = html.classList.toggle('dark-mode');
+      localStorage.setItem('dada_dark_mode', isDark ? '1' : '0');
+    });
+  }, 'darkModeToggle');
 
   // Auth bindings
   safe(function() {
@@ -204,7 +236,12 @@ function init() {
     document.getElementById('btnAuthCancel').addEventListener('click', hideAuthModal);
     document.getElementById('btnAuthSubmit').addEventListener('click', handleAuthSubmit);
     document.getElementById('authModeLink').addEventListener('click', toggleAuthMode);
+    document.getElementById('authForgotLink').addEventListener('click', showForgotPassword);
+    document.getElementById('btnSendCode').addEventListener('click', handleSendCode);
     document.getElementById('authPassword').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') handleAuthSubmit();
+    });
+    document.getElementById('authNewPassword').addEventListener('keydown', function(e) {
       if (e.key === 'Enter') handleAuthSubmit();
     });
   }, 'authBindings');
@@ -318,6 +355,10 @@ function init() {
   }, 'bookDetail');
 
   // Import CSV modal
+  safe(function() {
+    document.getElementById('btnPrint').addEventListener('click', printWordList);
+  }, 'printBtn');
+
   safe(function() {
     document.getElementById('btnImport').addEventListener('click', function() {
       document.getElementById('importModal').style.display = 'flex';
@@ -440,6 +481,7 @@ function init() {
   safe(function(){updateAllUI();},'updateUI');
   safe(function(){startLearnTimer();},'timer');
   safe(function(){checkAuth();},'checkAuth');
+  safe(function(){autoSyncAllBanks();},'autoSync');
 
   // Final status
   el.textContent = errLog.length > 0 ? 'ERRS(' + errLog.length + '): ' + errLog.join(' | ') : 'DADA OK';

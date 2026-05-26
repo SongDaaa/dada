@@ -47,16 +47,21 @@ def init_db():
         db.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0")
     except:
         pass
+    # Migration: add email column if missing
+    try:
+        db.execute("ALTER TABLE users ADD COLUMN email TEXT DEFAULT ''")
+    except:
+        pass
     db.commit()
     db.close()
 
 # ── User ──
 
-def create_user(username, password_hash):
+def create_user(username, password_hash, email=''):
     db = get_db()
     try:
-        db.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)",
-                   (username, password_hash))
+        db.execute("INSERT INTO users (username, password_hash, email) VALUES (?, ?, ?)",
+                   (username, password_hash, email))
         db.commit()
         return db.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
     except sqlite3.IntegrityError:
@@ -75,6 +80,18 @@ def get_user_by_id(user_id):
     row = db.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone()
     db.close()
     return row
+
+def get_user_by_email(email):
+    db = get_db()
+    row = db.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+    db.close()
+    return row
+
+def update_user_password(user_id, new_password_hash):
+    db = get_db()
+    db.execute("UPDATE users SET password_hash=? WHERE id=?", (new_password_hash, user_id))
+    db.commit()
+    db.close()
 
 # ── Words ──
 

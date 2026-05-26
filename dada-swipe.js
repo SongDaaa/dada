@@ -71,7 +71,6 @@ function renderSwipeCard() {
 
   // Reset reveal state
   swipeRevealState = false;
-  var card = document.getElementById('swipeCard');
   card.style.borderLeft = '';
   card.className = 'swipe-card';
 
@@ -122,6 +121,7 @@ function doSwipe(direction) {
   // First tap: record answer and show result
   if (direction === 'right') {
     scheduleReview(id, w.reviews ? w.reviews.length : 0);
+    recordWordStudied();
     swipeKnown++;
   } else {
     if (!w.nextReview) w.nextReview = Date.now() + 86400000;
@@ -225,7 +225,13 @@ function setupSwipeTouch() {
   });
 
   card.addEventListener('touchend', function(e) {
-    if (!touchMoved || swipeIdx >= swipeQueue.length) {
+    if (swipeIdx >= swipeQueue.length) return;
+    // If showing answer, a tap advances to next word
+    if (swipeRevealState) {
+      doSwipe('right'); // direction doesn't matter for advancing
+      return;
+    }
+    if (!touchMoved) {
       card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
       card.style.transform = 'translateX(0) rotate(0deg)';
       card.style.opacity = '1';
@@ -236,7 +242,6 @@ function setupSwipeTouch() {
     if (dx > 70) { doSwipe('right'); }
     else if (dx < -70) { doSwipe('left'); }
     else {
-      // Snap back
       card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
       card.style.transform = 'translateX(0) rotate(0deg)';
       card.style.opacity = '1';

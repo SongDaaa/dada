@@ -79,6 +79,7 @@ function handleKnow() {
   var w = words[id];
   scheduleReview(id, w.reviews ? w.reviews.length : 0);
   stats.wordsStudied = (stats.wordsStudied || 0) + 1;
+  recordWordStudied();
   saveWords();
   saveStats();
   studyIdx++; studyMaxIdx = Math.max(studyMaxIdx, studyIdx);
@@ -186,6 +187,10 @@ function handleQuizClick(btn) {
     trackMistake(quizWord.en);
   }
   updateQuizStatsUI();
+  // Auto-next for inline quiz
+  if (document.getElementById('quizInline') && document.getElementById('quizInline').style.display !== 'none') {
+    setTimeout(function() { generateInlineQuiz(); }, 800);
+  }
 }
 
 function checkSpelling() {
@@ -201,6 +206,10 @@ function checkSpelling() {
   }
   updateQuizStatsUI();
   document.getElementById('spellingInput').value = '';
+  // Auto-next for inline quiz
+  if (document.getElementById('quizInline') && document.getElementById('quizInline').style.display !== 'none') {
+    setTimeout(function() { generateInlineQuiz(); }, 1000);
+  }
 }
 
 function trackMistake(en) {
@@ -209,8 +218,70 @@ function trackMistake(en) {
 }
 
 function updateQuizStatsUI() {
-  document.getElementById('quizCorrect').textContent = quizCorrect;
-  document.getElementById('quizWrong').textContent = quizWrong;
-  var total = quizCorrect + quizWrong;
-  document.getElementById('quizRate').textContent = total > 0 ? Math.round(quizCorrect / total * 100) + '%' : '-';
+  var elC = document.getElementById('qzCor');
+  var elW = document.getElementById('qzWro');
+  if (elC) elC.textContent = quizCorrect;
+  if (elW) elW.textContent = quizWrong;
+}
+
+// ── Inline Quiz on Study Page ──
+
+function toggleInlineQuiz() {
+  var el = document.getElementById('quizInline');
+  if (!el) return;
+  if (el.style.display === 'none' || !el.style.display) {
+    el.style.display = '';
+    quizCorrect = 0; quizWrong = 0;
+    updateQuizStatsUI();
+    switchInlineQuiz('en2zh');
+    document.getElementById('btnToggleQuiz').textContent = '🔄 换一组';
+  } else {
+    // Just regenerate with same mode
+    quizCorrect = 0; quizWrong = 0;
+    updateQuizStatsUI();
+    generateInlineQuiz();
+  }
+}
+
+function switchInlineQuiz(mode) {
+  quizMode = mode;
+  document.querySelectorAll('#quizInline .quiz-mode-bar button').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  document.getElementById('quizOpts').style.display = mode === 'spell' ? 'none' : '';
+  document.getElementById('spellingInput').style.display = mode === 'spell' ? '' : 'none';
+  quizCorrect = 0; quizWrong = 0;
+  updateQuizStatsUI();
+  generateInlineQuiz();
+}
+
+function generateInlineQuiz() {
+  // Pick from recently studied words or all available
+  var pool = studyQueue.length > 0 ? studyQueue.slice(0, Math.min(studyQueue.length, 20)) : Object.keys(words);
+  if (pool.length < 4) {
+    document.getElementById('quizWord').textContent = '词库不足4个单词';
+    document.getElementById('quizOpts').innerHTML = '';
+    return;
+  }
+  var shuffled = pool.slice();
+  shuffle(shuffled);
+  var correctIdx = 0;
+  quizWord = words[shuffled[correctIdx]];
+  var qWordEl = document.getElementById('quizWord');
+  document.getElementById('quizResult').innerHTML = '';
+  if (quizMode === 'en2zh') {
+    if (quizWord.phonetic) qWordEl.innerHTML = quizWord.en + '<br><small style="color:var(--sub);font-size:16px;">' + quizWord.phonetic + '</small>';
+    else qWordEl.textContent = quizWord.en;
+    renderEn2ZhOpts(shuffled, correctIdx, quizWord.zh);
+    try { speak(quizWord.en); } catch(e) {}
+  } else if (quizMode === 'zh2en') {
+    qWordEl.textContent = quizWord.zh;
+    renderZh2EnOpts(shuffled, correctIdx, quizWord.en);
+    try { speak(quizWord.en); } catch(e) {}
+  } else if (quizMode === 'spell') {
+    qWordEl.textContent = '🔊 听音拼写';
+    document.getElementById('spellingInput').value = '';
+    document.getElementById('quizResult').innerHTML = '';
+    setTimeout(function() { try { speak(quizWord.en); } catch(e) {} }, 300);
+  }
 }
