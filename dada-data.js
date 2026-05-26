@@ -250,19 +250,19 @@ function loadWords() {
     var raw = localStorage.getItem(STORAGE_KEY);
     words = raw ? JSON.parse(raw) : {};
   } catch(e) { words = {}; localStorage.removeItem(STORAGE_KEY); }
-  if (Object.keys(words).length === 0) {
-    // First launch: load all preset categories
-    var cats = ['cet4','cet6','ky','ielts','zsb'];
-    for (var i = 0; i < cats.length; i++) { try { initPreset(cats[i]); } catch(e) {} }
-    // Mark that we need server sync
-    localStorage.setItem('dada_need_sync', '1');
+  // Always ensure all preset categories are loaded (dedup by word)
+  var cats = ['cet4','cet6','ky','ielts','zsb'];
+  for (var i = 0; i < cats.length; i++) {
+    try {
+      var count = initPreset(cats[i]);
+      if (count > 0) localStorage.setItem('dada_need_sync', '1');
+    } catch(e) {}
   }
   try { updateAllUI(); } catch(e) {}
 }
 
 // ── Background sync of server word banks ──
 function autoSyncAllBanks() {
-  if (!localStorage.getItem('dada_need_sync')) return;
   var banks = [
     { cat: 'cet4', file: 'word_bank_CET4.json' },
     { cat: 'cet6', file: 'word_bank_CET6.json' },
@@ -289,7 +289,7 @@ function autoSyncAllBanks() {
     xhr.ontimeout = function() { setTimeout(syncNext, 500); };
     xhr.send();
   }
-  setTimeout(syncNext, 2000); // Delay to not block init
+  setTimeout(syncNext, 2000);
 }
 
 function saveWords() { localStorage.setItem(STORAGE_KEY, JSON.stringify(words)); try { markSyncDirty(); } catch(e) {} }
