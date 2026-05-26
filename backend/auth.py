@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from config import SECRET_KEY, JWT_EXPIRY_HOURS
-from models import create_user, get_user_by_username, get_user_by_id
+from models import create_user, get_user_by_username, get_user_by_id, is_admin, set_admin, get_all_users_stats
 import jwt, bcrypt, datetime
 
 auth_bp = Blueprint('auth', __name__)
@@ -41,8 +41,11 @@ def register():
     user = create_user(username, pw_hash)
     if user is None:
         return jsonify({'error': '用户名已存在'}), 409
+    # First user is admin
+    if user['id'] == 1:
+        set_admin(username)
     token = make_token(user['id'])
-    return jsonify({'token': token, 'user': {'id': user['id'], 'username': user['username']}})
+    return jsonify({'token': token, 'user': {'id': user['id'], 'username': user['username'], 'is_admin': bool(user['is_admin'])}})
 
 @auth_bp.route('/api/auth/login', methods=['POST'])
 def login():
@@ -55,12 +58,11 @@ def login():
     if user is None or not bcrypt.checkpw(password.encode(), user['password_hash'].encode()):
         return jsonify({'error': '用户名或密码错误'}), 401
     token = make_token(user['id'])
-    return jsonify({'token': token, 'user': {'id': user['id'], 'username': user['username']}})
-
+    return jsonify({'token': token, 'user': {'id': user['id'], 'username': user['username'], 'is_admin': bool(user['is_admin'])}})
 @auth_bp.route('/api/auth/me', methods=['GET'])
 @require_auth
 def me():
     user = get_user_by_id(request.user_id)
     if user is None:
         return jsonify({'error': 'User not found'}), 404
-    return jsonify({'user': {'id': user['id'], 'username': user['username']}})
+    return jsonify({'user': {'id': user['id'], 'username': user['username'], 'is_admin': bool(user['is_admin'])}})
