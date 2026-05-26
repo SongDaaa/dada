@@ -18,6 +18,7 @@
 <script src="dada-init.js?v=13" defer></script>
 </head>
 <body>
+<div id="loadStatus" style="position:fixed;top:4px;right:8px;font-size:11px;color:#aaa;z-index:9999;">loading...</div>
 
 <!-- Splash Screen -->
 <div id="splash">
@@ -192,7 +193,7 @@
 
     <div class="backup-section">
       <div class="backup-header" id="backupToggle" style="cursor:pointer;font-size:13px;color:var(--sub);padding:8px 0;">💾 数据备份 ▸</div>
-      <div class="backup-body" id="backupBody" style="display:none;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <div class="backup-body" id="backupBody" style="display:none;gap:8px;flex-wrap:wrap;align-items:center;">
         <button class="btn btn-s btn-sm" id="btnExport">📤 导出JSON</button>
         <button class="btn btn-s btn-sm" id="btnImportFile">📥 导入JSON</button>
         <input type="file" id="importFileInput" accept=".json" style="display:none;">
