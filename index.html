@@ -74,7 +74,8 @@
         </div>
         <div class="card-face card-back">
           <div class="card-word" id="cardEnBack" style="font-size:20px;opacity:.8;"></div>
-          <div class="card-zh" id="cardZh">哒哒</div>
+          <div class="card-phonetic" id="cardPhoneticBack" style="font-style:italic;"></div>
+	          <div class="card-zh" id="cardZh">哒哒</div>
           <button class="speak-btn" id="speakBtn2" title="发音">🔊</button>
           <div class="card-hint">点击翻转</div>
         </div>
@@ -228,9 +229,9 @@
       </div>
     </div>
     <div class="swipe-hints">
-      <span>← 不认识</span>
-      <span>认识 →</span>
-    </div>
+	      <button class="btn btn-s" onclick="doSwipe('left')" style="padding:10px 24px;">← 不认识</button>
+	      <button class="btn btn-p" onclick="doSwipe('right')" style="padding:10px 24px;">认识 →</button>
+	    </div>
     <div id="swipeDone" style="text-align:center;padding:32px;"></div>
     <div style="text-align:center;margin-top:8px;">
       <button class="btn btn-p" id="btnSwipeRestart" style="display:none;" onclick="restartSwipe()">🔄 再来一轮</button>
