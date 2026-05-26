@@ -17,6 +17,8 @@ function switchPage(name) {
   if (navBtn) navBtn.classList.add('active');
   if (name === 'bank') { wordTableOffset = 0; currentBookFilter = null; showBookCards(); }
   if (name === 'review') renderReviewList();
+  if (name === 'challenge') { try { buildChallenge(); } catch(e) {} }
+  if (name === 'swipe') { try { buildSwipeQueue(); setupSwipeTouch(); setupSwipeKeyboard(); } catch(e) {} }
   if (name === 'study') { buildStudyQueue(); showCard(); startLearnTimer(); }
   else { stopLearnTimer(); saveStats(); }
 }
