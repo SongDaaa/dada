@@ -7,16 +7,17 @@
 <meta name="theme-color" content="#e07b5a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DADA背单词">
-<link rel="stylesheet" href="style.css?v=13">
-<script src="dada-data.js?v=13" defer></script>
-<script src="dada-speech.js?v=13" defer></script>
-<script src="dada-study.js?v=13" defer></script>
-<script src="dada-auth.js?v=13" defer></script>
-<script src="dada-challenge.js?v=13" defer></script>
-<script src="dada-swipe.js?v=13" defer></script>
-<script src="dada-admin.js?v=13" defer></script>
-<script src="dada-ui.js?v=13" defer></script>
-<script src="dada-init.js?v=13" defer></script>
+<link rel="stylesheet" href="style.css?v=22">
+<script src="dada-data.js?v=23" defer></script>
+<script src="dada-speech.js?v=19" defer></script>
+<script src="dada-study.js?v=19" defer></script>
+<script src="dada-auth.js?v=19" defer></script>
+<script src="dada-challenge.js?v=19" defer></script>
+<script src="dada-swipe.js?v=19" defer></script>
+
+<script src="dada-admin.js?v=19" defer></script>
+<script src="dada-ui.js?v=19" defer></script>
+<script src="dada-init.js?v=23" defer></script>
 </head>
 <body>
 <div id="loadStatus" style="position:fixed;top:4px;right:8px;font-size:11px;color:#aaa;z-index:9999;">loading...</div>
@@ -40,6 +41,7 @@
 <header>
   <div class="logo">DADA</div>
   <div class="header-right">
+    <button class="dark-toggle" id="btnDarkMode" title="切换深色模式">🌓</button>
     <button class="btn btn-s btn-sm" id="btnLogin">登录</button>
     <span id="syncStatus" style="font-size:11px;color:var(--sub);"></span>
     <span class="timer-badge" id="timerDisplay">⏱ 0:00</span>
@@ -119,6 +121,24 @@
       <button class="btn btn-p" id="btnKnow">✅ 我认识</button>
       <button class="btn btn-s" id="btnDunno">❌ 不认识</button>
     </div>
+    <div class="quiz-inline" id="quizInline" style="display:none;margin-top:20px;">
+      <div class="quiz-mode-bar">
+        <button class="active" data-mode="en2zh" onclick="switchInlineQuiz('en2zh')">英→中</button>
+        <button data-mode="zh2en" onclick="switchInlineQuiz('zh2en')">中→英</button>
+        <button data-mode="spell" onclick="switchInlineQuiz('spell')">听写</button>
+      </div>
+      <div class="quiz-card">
+        <div class="quiz-word" id="quizWord"></div>
+        <button class="speak-inline" id="quizSpeakBtn" title="发音" onclick="if(quizWord)try{speak(quizWord.en)}catch(e){}">🔊</button>
+        <div class="quiz-opts" id="quizOpts"></div>
+        <input type="text" id="spellingInput" placeholder="输入英文单词..." style="display:none;width:100%;padding:12px 14px;border:2px solid #e8e3dd;border-radius:12px;font-size:16px;text-align:center;outline:none;">
+        <div class="quiz-result" id="quizResult"></div>
+        <div style="font-size:13px;color:var(--sub);margin-top:8px;">✅ <b id="qzCor">0</b> ❌ <b id="qzWro">0</b></div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:16px;">
+      <button class="btn btn-s" id="btnToggleQuiz" style="font-size:14px;">📝 测验刚学的词</button>
+    </div>
 
     <!-- Calendar (collapsed by default) -->
     <div class="checkin-area">
@@ -141,12 +161,16 @@
     </div>
 
     <div class="mydata-panel">
-      <div class="mydata-header" id="mydataToggle">📊 我的数据 ▾</div>
-      <div class="mydata-body" id="mydataBody">
+      <div class="mydata-header" id="mydataToggle">📊 我的数据 ▶</div>
+      <div class="mydata-body collapsed" id="mydataBody">
         <div class="mydata-row"><span>📅 累计学习</span> <b id="mdTotalDays">0</b> 天</div>
         <div class="mydata-row"><span>⏱ 今日时长</span> <b id="mdTodayTime">0:00</b></div>
         <div class="mydata-row"><span>🕐 累计时长</span> <b id="mdTotalTime">0:00</b></div>
         <div class="mydata-row"><span>📖 累计单词</span> <b id="mdWordsStudied">0</b></div>
+        <div class="week-chart" id="weekChart">
+          <div class="week-label" style="font-size:11px;color:var(--sub);margin-bottom:4px;">📊 近7日学习</div>
+          <div class="week-bars" id="weekBars"></div>
+        </div>
       </div>
     </div>
   </section>
@@ -196,6 +220,7 @@
     <div class="backup-section">
       <div class="backup-header" id="backupToggle" style="cursor:pointer;font-size:13px;color:var(--sub);padding:8px 0;">💾 数据备份 ▸</div>
       <div class="backup-body" id="backupBody" style="display:none;gap:8px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-s btn-sm" id="btnPrint">🖨 打印词单</button>
         <button class="btn btn-s btn-sm" id="btnExport">📤 导出JSON</button>
         <button class="btn btn-s btn-sm" id="btnImportFile">📥 导入JSON</button>
         <input type="file" id="importFileInput" accept=".json" style="display:none;">
@@ -207,23 +232,41 @@
 
   <!-- Challenge Page -->
   <section class="page" id="page-challenge">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-      <span id="challengeHearts" style="font-size:24px;">❤️❤️❤️</span>
-      <span style="font-size:13px;color:var(--sub);">🏆 连胜 <b id="challengeStreakBadge">0</b> 天</span>
+    <!-- Pre-game setup -->
+    <div id="challengeSetup" style="text-align:center;padding:40px 20px;">
+      <div style="font-size:64px;margin-bottom:12px;">⚔️</div>
+      <h3 style="color:var(--accent);margin-bottom:8px;">挑战模式</h3>
+      <p style="color:var(--sub);font-size:14px;margin-bottom:24px;">3条命 · 4选1 · 答错扣命回阶段0 · 通关推进艾宾浩斯</p>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;flex-wrap:wrap;">
+        <button class="btn btn-s challenge-size-btn active" data-size="20">20 词</button>
+        <button class="btn btn-s challenge-size-btn" data-size="30">30 词</button>
+        <button class="btn btn-s challenge-size-btn" data-size="50">50 词</button>
+      </div>
+      <div style="color:var(--sub);font-size:12px;margin-bottom:16px;">
+        今日已完成 <b id="challengeRoundsToday">0</b> 轮 | 连胜 🏆 <b id="challengeStreakBadge">0</b> 天
+      </div>
+      <button class="btn btn-p" id="btnStartChallenge" style="font-size:18px;padding:14px 48px;">开始挑战 →</button>
     </div>
-    <div style="background:#e8e3dd;border-radius:8px;height:8px;margin-bottom:16px;">
-      <div id="challengeBar" style="background:var(--accent);height:100%;border-radius:8px;width:0;transition:width .3s;"></div>
-    </div>
-    <div style="text-align:center;color:var(--sub);font-size:13px;margin-bottom:8px;" id="challengeCount">0/20</div>
-    <div class="quiz-card" id="challengeCard">
-      <div class="quiz-word" id="challengeWord"></div>
-      <button class="speak-inline" id="challengeSpeakBtn" title="发音" onclick="speakChallengeWord()">🔊</button>
-      <div class="quiz-opts" id="challengeOpts"></div>
-    </div>
-    <div id="challengeResult"></div>
-    <div style="text-align:center;margin-top:16px;">
-      <button class="btn btn-p" id="btnRestartChallenge" style="display:none;" onclick="restartChallenge()">🔄 再来一次</button>
-      <button class="btn btn-s" id="btnChallengeDone" style="display:none;" onclick="switchPage('study')">返回学习</button>
+    <!-- In-game -->
+    <div id="challengeGame" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <span id="challengeHearts" style="font-size:24px;">❤️❤️❤️</span>
+        <span style="font-size:13px;color:var(--sub);">🏆 连胜 <b id="challengeStreakBadge2">0</b> 天</span>
+      </div>
+      <div class="challenge-bar-bg" style="background:#e8e3dd;border-radius:8px;height:8px;margin-bottom:16px;">
+        <div id="challengeBar" style="background:var(--accent);height:100%;border-radius:8px;width:0;transition:width .3s;"></div>
+      </div>
+      <div style="text-align:center;color:var(--sub);font-size:13px;margin-bottom:8px;" id="challengeCount">0/20</div>
+      <div class="quiz-card" id="challengeCard">
+        <div class="quiz-word" id="challengeWord"></div>
+        <button class="speak-inline" id="challengeSpeakBtn" title="发音" onclick="speakChallengeWord()">🔊</button>
+        <div class="quiz-opts" id="challengeOpts"></div>
+      </div>
+      <div id="challengeResult"></div>
+      <div style="text-align:center;margin-top:16px;">
+        <button class="btn btn-p" id="btnRestartChallenge" style="display:none;" onclick="restartChallenge()">🔄 再来一轮</button>
+        <button class="btn btn-s" id="btnChallengeDone" style="display:none;" onclick="showChallengeSetup()">返回</button>
+      </div>
     </div>
   </section>
 
@@ -311,16 +354,33 @@
 <!-- Auth Modal -->
 <div class="modal" id="authModal" style="display:none;">
   <div class="modal-box">
-    <h3 id="authTitle">登录</h3>
+    <form novalidate autocomplete="off"><h3 id="authTitle">登录</h3>
     <input type="hidden" id="authMode" value="login">
     <p id="authError" style="color:#d44;font-size:13px;margin-bottom:8px;"></p>
-    <input type="text" id="authUsername" placeholder="用户名" style="width:100%;padding:10px 14px;border:2px solid #e8e3dd;border-radius:10px;font-size:14px;margin-bottom:8px;outline:none;">
-    <input type="password" id="authPassword" placeholder="密码" style="width:100%;padding:10px 14px;border:2px solid #e8e3dd;border-radius:10px;font-size:14px;margin-bottom:12px;outline:none;">
-    <div class="modal-actions">
-      <button class="btn btn-s" id="btnAuthCancel">取消</button>
-      <button class="btn btn-p" id="btnAuthSubmit">登录</button>
+    <div id="authFieldUsername" style="margin-bottom:8px;">
+      <input type="text" id="authUsername" placeholder="用户名" autocomplete="username" style="width:100%;padding:10px 14px;border:2px solid #e8e3dd;border-radius:10px;font-size:14px;outline:none;">
     </div>
-    <p style="text-align:center;margin-top:12px;font-size:12px;color:var(--sub);cursor:pointer;" id="authModeLink">没有账号？去注册</p>
+    <div id="authFieldEmail" style="margin-bottom:8px;display:none;">
+      <input type="text" id="authEmail" placeholder="邮箱地址" style="width:100%;padding:10px 14px;border:2px solid #e8e3dd;border-radius:10px;font-size:14px;outline:none;">
+    </div>
+    <div id="authFieldCode" style="margin-bottom:8px;display:none;">
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="authCode" placeholder="验证码" maxlength="6" style="flex:1;padding:10px 14px;border:2px solid #e8e3dd;border-radius:10px;font-size:14px;outline:none;">
+        <button type="button" class="btn btn-s btn-sm" id="btnSendCode" style="white-space:nowrap;">发送验证码</button>
+      </div>
+    </div>
+    <div id="authFieldPassword" style="margin-bottom:12px;">
+      <input type="password" id="authPassword" placeholder="密码" style="width:100%;padding:10px 14px;border:2px solid #e8e3dd;border-radius:10px;font-size:14px;margin-bottom:8px;outline:none;">
+    </div>
+    <div id="authFieldNewPassword" style="margin-bottom:12px;display:none;">
+      <input type="password" id="authNewPassword" placeholder="新密码" style="width:100%;padding:10px 14px;border:2px solid #e8e3dd;border-radius:10px;font-size:14px;outline:none;">
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-s" id="btnAuthCancel">取消</button>
+      <button type="button" class="btn btn-p" id="btnAuthSubmit">登录</button>
+    </div>
+    </form><p style="text-align:center;margin-top:12px;font-size:12px;color:var(--sub);cursor:pointer;" id="authModeLink">没有账号？去注册</p>
+    <p style="text-align:center;margin-top:4px;font-size:12px;color:var(--sub);cursor:pointer;" id="authForgotLink">忘记密码？</p>
   </div>
 </div>
 
