@@ -18,6 +18,7 @@ function switchPage(name) {
   if (name === 'bank') { wordTableOffset = 0; currentBookFilter = null; showBookCards(); }
   if (name === 'challenge') { try { buildChallenge(); } catch(e) {} }
   if (name === 'swipe') { try { buildSwipeQueue(); setupSwipeTouch(); setupSwipeKeyboard(); } catch(e) {} }
+  if (name === 'admin') { stopLearnTimer(); saveStats(); loadAdminUsers(); return; }
   if (name === 'study') { buildStudyQueue(); showCard(); startLearnTimer(); }
   else { stopLearnTimer(); saveStats(); }
 }
